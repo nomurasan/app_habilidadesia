@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isValidCompany(data) {
+      return data.name is string && data.name.size() > 0;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isGlobalAdmin() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
+    }
+
+    // User Profile Validation
+    function isValidUser(data) {
+      return data.userId == request.auth.uid &&
+             data.xp is number && data.xp >= 0 &&
+             data.unlockedPowers is list &&
+             data.currentMissionIndex is number &&
+             data.currentMissionIndex >= 0 &&
+             (!data.keys().hasAny(['missionProgress']) || data.missionProgress is map) &&
+             (data.keys().hasAll(['userId', 'xp', 'unlockedPowers', 'currentMissionIndex']) && 
+              data.keys().size() >= 4 && data.keys().size() <= 15);
+    }
+
+    // Company Validation
+    function isCompanyMember(companyId) {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '') == companyId;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn(); 
+      allow list: if isSignedIn() && (
+        isGlobalAdmin() ||
+        !('companyId' in resource.data) || 
+        resource.data.companyId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '')
+      ); 
+      
+      allow create: if isOwner(userId) && isValidId(userId);
+
+      allow update: if isOwner(userId) || isGlobalAdmin();
+
+      allow delete: if isSignedIn();
+    }
+
+    function isAdminOfCompany(cid) {
+      return isGlobalAdmin() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '') == cid;
+    }
+
+    match /companies/{companyId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(companyId) && isValidCompany(incoming());
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+
+      match /whitelist/{emailId} {
+        allow read: if isSignedIn();
+        allow write: if isGlobalAdmin();
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-zello-orange: #F05A28;
+  --color-zello-black: #0F172A;
+}
+
+@layer base {
+  body {
+    @apply bg-zello-black text-slate-100;
+  }
+}
+
+/* Retire as barras de rolagem globalmente */
+html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
