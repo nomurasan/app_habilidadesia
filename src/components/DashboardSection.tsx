@@ -19,7 +19,8 @@ import {
   LayoutGrid,
   Quote,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Play
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -61,6 +62,7 @@ interface DashboardSectionProps {
     email: string;
     skillsSurvey?: Record<string, { current: number; target: number }>;
   } | null;
+  onWatchVideo?: (title: string, url: string) => void;
 }
 
 export const DashboardSection: React.FC<DashboardSectionProps> = ({
@@ -70,7 +72,8 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   completedMissions,
   missionCards,
   teamStats,
-  userProfile
+  userProfile,
+  onWatchVideo
 }) => {
   // Mock data for charts - in a real app these would come from aggregate Firestore queries
   const maturityData = [
@@ -195,16 +198,58 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   return (
     <div className="space-y-16 py-12">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-b border-white/5">
-        <div>
+      <div className="flex flex-col xl:flex-row items-center xl:items-start justify-between gap-8 pb-12 border-b border-white/5">
+        <div className="space-y-4 text-center xl:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zello-orange/10 border border-zello-orange/20 text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-4">
             <Trophy size={14} className="fill-zello-orange" />
             Central de Inteligência
           </div>
-          <h2 className="text-4xl md:text-6xl font-black text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">DASHBOARDS <br /> <span className="text-zello-orange">DE EVOLUÇÃO</span></h2>
+          <h2 className="text-4xl md:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">DASHBOARDS <br /> <span className="text-zello-orange">DE EVOLUÇÃO</span></h2>
         </div>
+
+        {/* Arte da Chamada do Vídeo do Mestre Nomura */}
+        {onWatchVideo && (
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
+            <div className="relative shrink-0">
+              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+              <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                <img 
+                  src="/Mestre Nomura.png"
+                  alt="Mestre Nomura"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                <Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+              </div>
+            </div>
+            
+            <div className="text-center sm:text-left space-y-2 flex-1">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
+              <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                "Os dados mostram o seu progresso na Força da IA. Entenda a sua evolução para direcionar melhor suas táticas."
+              </p>
+              
+              <div className="pt-2">
+                <button
+                  onClick={() => onWatchVideo('Dashboard & Evolução', 'https://www.youtube.com/embed/FPt80Av44ug?rel=0')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
+                >
+                  <Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                  Como Funciona o Dashboard?
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
-        <div className="flex flex-col gap-6 items-end">
+        <div className="flex flex-col gap-6 items-center xl:items-end w-full xl:w-auto shrink-0">
           <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-fit">
             <button
               onClick={() => setActiveTab('individual')}
@@ -433,16 +478,16 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             )}
           </div>
 
-          {/* Feedback Mestre Yoda */}
+          {/* Feedback Mestre Nomura */}
           <div className="p-8 rounded-[32px] bg-zello-orange/10 border border-zello-orange/20 space-y-6 relative overflow-hidden">
             <Quote className="absolute top-10 right-10 text-zello-orange opacity-10 pointer-events-none" size={120} />
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center border-4 border-emerald-500/20 shadow-lg overflow-hidden">
-                <img src="https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png" alt="Yoda" referrerPolicy="no-referrer" className="w-full h-full object-cover scale-150 translate-y-2" />
+                <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h5 className="text-zello-orange text-xs font-black uppercase tracking-widest">Feedback do Mentor</h5>
-                <div className="text-xl font-black text-white italic uppercase">Mestre Yoda diz:</div>
+                <div className="text-xl font-black text-white italic uppercase">Mestre Nomura diz:</div>
               </div>
             </div>
             

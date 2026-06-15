@@ -73,8 +73,8 @@ const RANKS: Record<string, RankInfo> = {
     color: 'text-orange-500'
   },
   YODA: {
-    name: 'Mestre Yoda',
-    image: 'https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png',
+    name: 'Mestre Nomura',
+    image: '/Mestre Nomura.png',
     description: 'Dia 3: Pensando a IA de forma estratégica e imaginando o futuro.',
     color: 'text-emerald-400'
   }
@@ -127,6 +127,7 @@ export default function App() {
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [bulkEmailText, setBulkEmailText] = useState('');
   const [adminShowAllCompanies, setAdminShowAllCompanies] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<{ title: string; url: string } | null>(null);
 
   const [customAlert, setCustomAlert] = useState<{
     type: 'info' | 'success' | 'error' | 'confirm';
@@ -1662,6 +1663,53 @@ export default function App() {
                 <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
                   Três dimensões para você explorar: Deck de Habilidades, Quizzes de Conhecimento e Missões Táticas.
                 </p>
+                <div className="flex justify-center pt-2 w-full">
+                  <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07]">
+                    <div className="relative">
+                      {/* Outer spinning ring / glow */}
+                      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+                      <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                        <img 
+                          src="/Mestre Nomura.png"
+                          alt="Mestre Nomura"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover object-top"
+                        />
+                        {/* Glowing orange lightsaber beam overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+                      </div>
+                      
+                      {/* Lightsaber Active Badge */}
+                      <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                        <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+                      </div>
+                    </div>
+                    
+                    <div className="text-center sm:text-left space-y-2 flex-1">
+                      <div className="flex items-center justify-center sm:justify-start gap-2">
+                        <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      </div>
+                      <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5">Mestre Nomura</h3>
+                      <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                        "Treine a sua mente e domine o poder da inteligência artificial para conquistar novos patamares!"
+                      </p>
+                      
+                      <div className="pt-2">
+                        <button
+                          onClick={() => setActiveVideo({
+                            title: 'Como Funciona a Jornada?',
+                            url: 'https://www.youtube.com/embed/vq01pL4Hjoc?rel=0'
+                          })}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
+                        >
+                          <LucideIcons.Play size={10} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                          Como Funciona a Jornada?
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
@@ -1740,32 +1788,84 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-[1400px] mx-auto p-8 space-y-12"
             >
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Escolha seu Quiz</h2>
-                <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
+                <div className="space-y-4 text-center lg:text-left flex-1">
+                  <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Escolha seu Quiz</h2>
                   <p className="text-slate-400 font-medium">Selecione o nível de dificuldade e a quantidade de perguntas</p>
                   
-                  <div className="flex items-center gap-6 bg-white/5 p-4 rounded-3xl border border-white/10">
-                    <span className="text-xs font-black uppercase tracking-widest text-zello-orange">Nº PERGUNTAS:</span>
-                    <div className="flex items-center gap-2">
-                      {[1, 3, 5, 10].map((num) => (
-                        <button
-                          key={`q-count-${num}`}
-                          onClick={() => setQuestionCount(num)}
-                          className={`w-10 h-10 rounded-xl font-black transition-all ${questionCount === num ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-500 hover:text-white'}`}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="10" 
-                        value={questionCount}
-                        onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                        className="ml-4 accent-zello-orange"
+                  <div className="flex flex-wrap gap-4 items-center justify-center lg:justify-start">
+                    <div className="flex items-center gap-6 bg-white/5 p-4 rounded-3xl border border-white/10 w-fit">
+                      <span className="text-xs font-black uppercase tracking-widest text-zello-orange shrink-0">Nº PERGUNTAS:</span>
+                      <div className="flex items-center gap-2">
+                        {[1, 3, 5, 10].map((num) => (
+                          <button
+                            key={`q-count-${num}`}
+                            onClick={() => setQuestionCount(num)}
+                            className={`w-10 h-10 rounded-xl font-black transition-all ${questionCount === num ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-500 hover:text-white'}`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                        <input 
+                          type="range" 
+                          min="1" 
+                          max="10" 
+                          value={questionCount}
+                          onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                          className="ml-4 accent-zello-orange"
+                        />
+                        <span className="w-8 text-center font-black text-zello-orange">{questionCount}</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setGameState('home')}
+                      className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      Voltar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Arte da Chamada do Vídeo do Mestre Nomura */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
+                  <div className="relative shrink-0">
+                    <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                      <img 
+                        src="/Mestre Nomura.png"
+                        alt="Mestre Nomura"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover object-top"
                       />
-                      <span className="w-8 text-center font-black text-zello-orange">{questionCount}</span>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                      <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <div className="text-center sm:text-left space-y-2 flex-1">
+                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                      <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </div>
+                    <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
+                    <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                      "Dê o primeiro passo para testar seus conhecimentos. O aprendizado real vem dos desafios superados. Que a força esteja com você!"
+                    </p>
+                    
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setActiveVideo({
+                          title: 'Como Funciona o Quiz?',
+                          url: 'https://www.youtube.com/embed/ImwqltRINI8?rel=0'
+                        })}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
+                      >
+                        <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                        Como Funciona o Quiz?
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1822,9 +1922,21 @@ export default function App() {
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                  <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white">
-                    Desafio {currentChallenge.title}
-                  </h3>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white">
+                      Desafio {currentChallenge.title}
+                    </h3>
+                    <button
+                      onClick={() => setActiveVideo({
+                        title: 'Quizzes (Desafios)',
+                        url: 'https://www.youtube.com/embed/cl00Nor2OAk?rel=0'
+                      })}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:border-zello-orange/30 text-[10px] text-slate-400 hover:text-white font-bold uppercase tracking-widest rounded-full transition-all cursor-pointer group"
+                    >
+                      <LucideIcons.Play size={8} className="fill-slate-400 group-hover:fill-white text-slate-400 group-hover:text-white" />
+                      Como Funciona o Quiz
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2 mt-2">
                     {levelChallenges.map((_, idx) => (
                       <div 
@@ -1983,14 +2095,14 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-4 mt-6 pt-6 border-t border-white/5">
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-emerald-500/20 relative border border-emerald-500/30">
-                        <img src="https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png" alt="Mestre Yoda" referrerPolicy="no-referrer" className="w-full h-full object-cover scale-150 translate-y-1" />
+                        <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                         {isAiFeedbackLoading && (
                           <div className="absolute inset-0 bg-emerald-500/40 flex items-center justify-center">
                             <LucideIcons.Loader2 className="text-white animate-spin" size={16} />
                           </div>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-white">Mestre Yoda</span>
+                      <span className="text-xs font-bold text-white">Mestre Nomura</span>
                     </div>
                   </div>
                 </div>
@@ -2007,9 +2119,63 @@ export default function App() {
             >
               {!selectedMission ? (
                 <div key="mission-list-container" className="space-y-12">
-                  <div className="text-center space-y-4">
-                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Missões Táticas</h2>
-                    <p className="text-slate-400 font-medium">Selecione uma missão para explorar cenários reais de aplicação de IA</p>
+                  <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
+                    <div className="space-y-4 text-center lg:text-left flex-1 font-sans">
+                      <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Missões Táticas</h2>
+                      <p className="text-slate-400 font-medium">Selecione uma missão para explorar cenários reais de aplicação de IA</p>
+                      
+                      <div className="flex justify-center lg:justify-start">
+                        <button 
+                          onClick={() => setGameState('home')}
+                          className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
+                        >
+                          Voltar ao Início
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Arte da Chamada do Vídeo do Mestre Nomura */}
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
+                      <div className="relative shrink-0">
+                        <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+                        <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                          <img 
+                            src="/Mestre Nomura.png"
+                            alt="Mestre Nomura"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover object-top"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                          <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+                        </div>
+                      </div>
+                      
+                      <div className="text-center sm:text-left space-y-2 flex-1">
+                        <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
+                        <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                          "As missões táticas vão exigir foco e sabedoria. Conecte as melhores ferramentas de IA da sua coleção para resolver casos práticos e reais!"
+                        </p>
+                        
+                        <div className="pt-2">
+                          <button
+                            onClick={() => setActiveVideo({
+                              title: 'Como Funcionam as Missões?',
+                              url: 'https://www.youtube.com/embed/G1rbjZL8o8E?rel=0'
+                            })}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
+                          >
+                            <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                            Como Funcionam as Missões?
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {MISSIONS.map((mission, idx) => (
@@ -2273,7 +2439,7 @@ export default function App() {
                           ) : (
                             <>
                               <LucideIcons.Bot className="group-hover:scale-110 transition-transform" size={16} />
-                              Mestre Yoda: Me ajude a descrever a solução
+                              Mestre Nomura: Me ajude a descrever a solução
                             </>
                           )}
                         </button>
@@ -2317,12 +2483,12 @@ export default function App() {
                           {isAskingAdvisor ? (
                             <>
                               <LucideIcons.Loader2 className="animate-spin" size={16} />
-                              Consultando Mestre Yoda...
+                              Consultando Mestre Nomura...
                             </>
                           ) : (
                             <>
                               <LucideIcons.Bot size={16} />
-                              Mestre Yoda: Avaliar minha estratégia
+                              Mestre Nomura: Avaliar minha estratégia
                             </>
                           )}
                         </button>
@@ -2613,8 +2779,8 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               className="max-w-[1400px] mx-auto space-y-12 mb-20 p-6"
             >
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
+              <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
+                <div className="space-y-4 text-center lg:text-left">
                   <h3 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white">
                     {isSelectingForMission ? 'Selecione até 4 Habilidades' : 'Seu Deck de Habilidades'}
                   </h3>
@@ -2624,28 +2790,72 @@ export default function App() {
                       : `Explore as ${AI_POWERS.length} habilidades fundamentais de IA`
                     }
                   </p>
-                </div>
-                <div className="flex gap-4">
-                  {isSelectingForMission && (
+                  
+                  <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                    {isSelectingForMission && (
+                      <button 
+                        onClick={() => {
+                          setIsSelectingForMission(false);
+                          setGameState('missions');
+                        }}
+                        className="px-8 py-4 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.4)] hover:brightness-110 active:scale-95 transition-all"
+                      >
+                        Confirmar Seleção
+                      </button>
+                    )}
                     <button 
                       onClick={() => {
                         setIsSelectingForMission(false);
-                        setGameState('missions');
+                        setGameState(isSelectingForMission ? 'missions' : 'home');
                       }}
-                      className="px-8 py-4 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.4)] hover:brightness-110 active:scale-95 transition-all"
+                      className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
                     >
-                      Confirmar Seleção
+                      Voltar
                     </button>
-                  )}
-                  <button 
-                    onClick={() => {
-                      setIsSelectingForMission(false);
-                      setGameState(isSelectingForMission ? 'missions' : 'home');
-                    }}
-                    className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
-                  >
-                    Voltar
-                  </button>
+                  </div>
+                </div>
+
+                {/* Arte da Chamada do Vídeo do Mestre Nomura */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
+                  <div className="relative shrink-0">
+                    <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                      <img 
+                        src="/Mestre Nomura.png"
+                        alt="Mestre Nomura"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover object-top"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                      <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <div className="text-center sm:text-left space-y-2 flex-1">
+                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                      <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </div>
+                    <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
+                    <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                      "As habilidades de IA são as ferramentas do seu sabre de luz. Aprenda a selecioná-las para criar soluções extraordinárias!"
+                    </p>
+                    
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setActiveVideo({
+                          title: 'Como Funciona o Deck?',
+                          url: 'https://www.youtube.com/embed/Ko8iu2LiH-4?rel=0'
+                        })}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
+                      >
+                        <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                        Como Funciona o Deck?
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -2721,6 +2931,7 @@ export default function App() {
                 missionCards={missionCards}
                 teamStats={teamStats}
                 userProfile={userProfile}
+                onWatchVideo={(title, url) => setActiveVideo({ title, url })}
               />
             </motion.div>
           )}
@@ -2874,6 +3085,59 @@ export default function App() {
                     </button>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Tutorial Modal */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-zinc-950/95 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="w-full max-w-sm sm:max-w-md bg-zinc-900 border border-white/10 rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(240,90,40,0.25)] relative flex flex-col h-[85vh] max-h-[75vh]"
+            >
+              {/* Header with Title and Close button */}
+              <div className="p-5 flex items-center justify-between border-b border-white/5 bg-zinc-900 relative z-10 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-zello-orange/10 flex items-center justify-center text-zello-orange">
+                    <LucideIcons.Play size={16} className="fill-zello-orange text-zello-orange" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase italic tracking-wider leading-none">{activeVideo.title}</h3>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5 block">Tutorial em Vídeo</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveVideo(null)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <LucideIcons.X size={16} />
+                </button>
+              </div>
+
+              {/* Video Player Box */}
+              <div className="flex-1 bg-black relative flex flex-col items-center justify-center p-2 overflow-hidden">
+                <iframe
+                  src={
+                    activeVideo.url + 
+                    (activeVideo.url.includes('?') ? '&' : '?') + 
+                    'autoplay=1&mute=0'
+                  }
+                  title={activeVideo.title}
+                  className="w-full h-full rounded-2xl border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
               </div>
             </motion.div>
           </motion.div>
