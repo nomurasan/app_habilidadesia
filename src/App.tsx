@@ -73,8 +73,8 @@ const RANKS: Record<string, RankInfo> = {
     color: 'text-orange-500'
   },
   YODA: {
-    name: 'Mestre Nomura',
-    image: '/Mestre Nomura.png',
+    name: 'Mestre Yoda',
+    image: 'https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png',
     description: 'Dia 3: Pensando a IA de forma estratégica e imaginando o futuro.',
     color: 'text-emerald-400'
   }
@@ -2438,8 +2438,13 @@ export default function App() {
                             </>
                           ) : (
                             <>
-                              <LucideIcons.Bot className="group-hover:scale-110 transition-transform" size={16} />
-                              Mestre Nomura: Me ajude a descrever a solução
+                              <img 
+                                src="https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png" 
+                                alt="Mestre Yoda" 
+                                referrerPolicy="no-referrer" 
+                                className="w-5 h-5 rounded-full object-cover border border-zello-orange/35 group-hover:scale-110 transition-transform" 
+                              />
+                              Mestre Yoda: Ajude-me a descrever a solução
                             </>
                           )}
                         </button>
@@ -2478,7 +2483,7 @@ export default function App() {
                               setIsAskingAdvisor(false);
                             }
                           }}
-                          className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
                           {isAskingAdvisor ? (
                             <>
@@ -2487,7 +2492,12 @@ export default function App() {
                             </>
                           ) : (
                             <>
-                              <LucideIcons.Bot size={16} />
+                              <img 
+                                src="/Mestre Nomura.png" 
+                                alt="Mestre Nomura" 
+                                referrerPolicy="no-referrer" 
+                                className="w-5 h-5 rounded-full object-cover border border-white/20 group-hover:scale-110 transition-transform" 
+                              />
                               Mestre Nomura: Avaliar minha estratégia
                             </>
                           )}
@@ -2742,11 +2752,11 @@ export default function App() {
 
                   <div className="p-6 md:p-8 pb-3 relative z-10 shrink-0">
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
-                      <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-full border-4 border-zello-orange overflow-hidden bg-white/10 p-1.5 shadow-[0_0_30px_rgba(240,90,40,0.5)]">
-                        <img src="https://img.icons8.com/fluency/512/robot.png" alt="Assistente" referrerPolicy="no-referrer" />
+                      <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-full border-4 border-zello-orange overflow-hidden bg-white/10 shadow-[0_0_30px_rgba(240,90,40,0.5)]">
+                        <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1">
-                        <div className="text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Recado do Assistente Técnico</div>
+                        <div className="text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Recado do Mestre Nomura</div>
                         <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight leading-none">{selectedMission.subtitle}</h3>
                       </div>
                     </div>
