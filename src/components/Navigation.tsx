@@ -186,6 +186,20 @@ export const Navigation: React.FC<NavigationProps> = ({
                   <ChevronRight size={16} className={gameState === 'admin' ? 'text-zello-orange' : 'text-slate-500'} />
                 </button>
               )}
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer bg-red-950/10 hover:bg-red-950/20 border border-red-500/10 text-red-400 hover:text-red-300 hover:border-red-500/20"
+              >
+                <span className="flex items-center gap-2.5">
+                  <LogOut size={16} />
+                  <span>Sair</span>
+                </span>
+                <ChevronRight size={16} className="text-red-500/40" />
+              </button>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-white/5">

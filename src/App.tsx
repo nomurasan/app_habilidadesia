@@ -1594,7 +1594,7 @@ export default function App() {
               key="home-section-view-call"
               score={score}
               setGameState={setGameState}
-              onWatchVideo={(title, url) => setActiveVideo({ title, url })}
+              setActiveVideo={setActiveVideo}
             />
           )}
 
@@ -1604,7 +1604,7 @@ export default function App() {
               questionCount={questionCount}
               setQuestionCount={setQuestionCount}
               setGameState={setGameState}
-              onWatchVideo={(title, url) => setActiveVideo({ title, url })}
+              setActiveVideo={setActiveVideo}
               startLevel={startLevel}
             />
           )}
@@ -2215,17 +2215,17 @@ export default function App() {
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="w-full max-w-sm sm:max-w-md bg-zinc-900 border border-white/10 rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(240,90,40,0.25)] relative flex flex-col h-[85vh] max-h-[75vh]"
+              className="w-full max-w-5xl h-[82vh] sm:h-[85vh] bg-zinc-900 border border-white/10 rounded-[28px] overflow-hidden shadow-[0_0_50px_rgba(240,90,40,0.3)] relative flex flex-col mx-2 sm:mx-4"
             >
               {/* Header with Title and Close button */}
-              <div className="p-5 flex items-center justify-between border-b border-white/5 bg-zinc-900 relative z-10 shrink-0">
+              <div className="p-4 flex items-center justify-between border-b border-white/5 bg-zinc-900 relative z-10 shrink-0">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-zello-orange/10 flex items-center justify-center text-zello-orange">
                     <LucideIcons.Play size={16} className="fill-zello-orange text-zello-orange" />
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase italic tracking-wider leading-none">{activeVideo.title}</h3>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5 block">Tutorial em Vídeo</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1 block">Tutorial em Vídeo</span>
                   </div>
                 </div>
                 <button
@@ -2236,17 +2236,18 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Video Player Box */}
-              <div className="flex-1 bg-black relative flex flex-col items-center justify-center p-2 overflow-hidden">
+              {/* Video Player Box - Expands to occupy all remaining screen vertical height */}
+              <div className="flex-1 w-full bg-black relative overflow-hidden">
                 <iframe
                   src={
-                    activeVideo.url + 
+                    activeVideo.url.replace('youtube-nocookie.com', 'youtube.com') + 
                     (activeVideo.url.includes('?') ? '&' : '?') + 
-                    'autoplay=1&mute=0'
+                    'autoplay=1'
                   }
                   title={activeVideo.title}
-                  className="w-full h-full rounded-2xl border-0"
+                  className="absolute inset-0 w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
                 ></iframe>
               </div>
