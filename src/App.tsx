@@ -102,6 +102,7 @@ export default function App() {
   const [isRewriting, setIsRewriting] = useState(false);
   const [isAdvisorModalOpen, setIsAdvisorModalOpen] = useState(false);
   const [isPresentingDeck, setIsPresentingDeck] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [completedMissions, setCompletedMissions] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSelectingForMission, setIsSelectingForMission] = useState(false);
@@ -974,12 +975,140 @@ export default function App() {
             <span className="text-[10px] text-zello-orange font-bold uppercase tracking-widest leading-none">Rank Atual</span>
             <span className={`text-sm font-black uppercase italic ${currentRank.color}`}>{currentRank.name}</span>
           </div>
-          <div className="flex flex-col items-center px-4 py-2 bg-zello-orange/10 rounded-2xl border border-zello-orange/20 min-w-[100px]">
+          <div className="hidden md:flex flex-col items-center px-4 py-2 bg-zello-orange/10 rounded-2xl border border-zello-orange/20 min-w-[100px]">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zello-orange/60 leading-none">XP Total</span>
             <span className="text-lg font-black text-zello-orange tabular-nums">{score.toLocaleString()}</span>
           </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden flex items-center justify-center p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+            aria-label="Abrir menu"
+          >
+            {isMobileMenuOpen ? <LucideIcons.X size={20} /> : <LucideIcons.Menu size={20} />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="md:hidden fixed top-20 left-0 right-0 bottom-0 bg-zello-black/95 backdrop-blur-md border-b border-white/5 flex flex-col justify-between py-8 px-6 overflow-y-auto z-40"
+          >
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setGameState('home');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'home' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+              >
+                <span>Início</span>
+                <LucideIcons.ChevronRight size={16} className={gameState === 'home' ? 'text-zello-orange' : 'text-slate-500'} />
+              </button>
+              
+              <button
+                onClick={() => {
+                  setGameState('deck');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'deck' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+              >
+                <span>Deck</span>
+                <LucideIcons.ChevronRight size={16} className={gameState === 'deck' ? 'text-zello-orange' : 'text-slate-500'} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setGameState('level-selection');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'level-selection' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+              >
+                <span>Quizzes</span>
+                <LucideIcons.ChevronRight size={16} className={gameState === 'level-selection' ? 'text-zello-orange' : 'text-slate-500'} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setGameState('missions');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'missions' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+              >
+                <span>Missões</span>
+                <LucideIcons.ChevronRight size={16} className={gameState === 'missions' ? 'text-zello-orange' : 'text-slate-500'} />
+              </button>
+
+              <button
+                onClick={() => {
+                  setGameState('dashboards');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'dashboards' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+              >
+                <span>Dashboard</span>
+                <LucideIcons.ChevronRight size={16} className={gameState === 'dashboards' ? 'text-zello-orange' : 'text-slate-500'} />
+              </button>
+
+              {userProfile?.isAdmin && (
+                <button
+                  onClick={() => {
+                    setGameState('admin');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'admin' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
+                >
+                  <span>Admin</span>
+                  <LucideIcons.ChevronRight size={16} className={gameState === 'admin' ? 'text-zello-orange' : 'text-slate-500'} />
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  signOut(auth);
+                }}
+                className="w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 cursor-pointer"
+              >
+                <span>Sair</span>
+                <LucideIcons.LogOut size={16} className="text-red-400" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-5 pt-5 border-t border-white/5">
+              <div className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-2xl">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zello-orange font-bold uppercase tracking-widest leading-none">Rank Atual</span>
+                  <span className={`text-sm font-black uppercase italic mt-1.5 ${currentRank.color}`}>{currentRank.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none block">Empresa</span>
+                  <span className="text-xs font-black text-white uppercase tracking-wider mt-1.5 block">
+                    {currentCompany?.name || '---'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  signOut(auth);
+                }}
+                className="w-full py-4 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-all text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-pointer"
+              >
+                <LucideIcons.LogOut size={16} />
+                Sair da Conta
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 overflow-y-auto custom-scrollbar pb-32">
@@ -1653,6 +1782,12 @@ export default function App() {
               className="min-h-full flex flex-col items-center justify-center p-8 text-center space-y-12 max-w-4xl mx-auto"
             >
               <div className="space-y-6">
+                {/* Mobile XP Total element below top navigation */}
+                <div className="md:hidden inline-flex flex-col items-center px-6 py-2 bg-zello-orange/10 rounded-2xl border border-zello-orange/20 min-w-[125px] max-w-fit mx-auto mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zello-orange/60 leading-none">XP Total</span>
+                  <span className="text-xl font-black text-zello-orange tabular-nums mt-1">{score.toLocaleString()}</span>
+                </div>
+
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zello-orange/10 border border-zello-orange/20 text-zello-orange text-xs font-black uppercase tracking-widest">
                   <Star size={14} className="fill-zello-orange" />
                   Jornada de Aprendizado
