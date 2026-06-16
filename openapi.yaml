@@ -1,0 +1,525 @@
+openapi: 3.0.3
+info:
+  title: Jedi IA Academy Executive Advisor API
+  description: >
+    This is the official API specification for the Jedi IA Academy backend.
+    It contains endpoints for generating personalized executive diagnostics, evaluating challenge outcomes,
+    negotiating tactical mission scenarios, and translating technical/normal language descriptions into executive copy.
+    All protected endpoints require Firebase Bearer token authentication and include automatic observability hooks (e.g. correlation tracing).
+  version: 1.0.0
+servers:
+  - url: /
+    description: Current deployment context
+paths:
+  /api/health:
+    get:
+      summary: Health check and service status
+      description: Returns readiness indicators, configuration health, and diagnostic infrastructure details.
+      responses:
+        '200':
+          description: Successful system verification query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: ok
+                      firebase:
+                        type: string
+                        example: configured
+                      openai:
+                        type: string
+                        example: configured
+                      uptime:
+                        type: number
+                        example: 1243.54
+                      version:
+                        type: string
+                        example: 1.0.0-production
+                  error:
+                    type: string
+                    nullable: true
+                    example: null
+                  traceId:
+                    type: string
+                    example: c8f654b2-8418-4a57-b003-ccbf8894df80
+
+  /api/admin/ai-failures:
+    get:
+      summary: Retrieve AI failure logs
+      description: Returns a sliding window of recent AI-related processing failures for observability and system audit. Strictly restricted to administrative users.
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Fetched logs successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      failures:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            timestamp:
+                              type: string
+                              format: date-time
+                            endpoint:
+                              type: string
+                            error:
+                              type: string
+                            userId:
+                              type: string
+                      totalTracked:
+                        type: integer
+                        example: 5
+                  error:
+                    type: string
+                    nullable: true
+                  traceId:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/gerar-relatorio:
+    post:
+      summary: Generate Personalized Jedi Executive Diagnostic Report
+      description: Evaluates survey results, total XP, unlocked powers, and completed scenarios to generate a detailed Jedi-inspired organizational strategic report.
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GerarRelatorioPayload'
+      responses:
+        '200':
+          description: Report generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      relatorio:
+                        type: string
+                        description: Markdown-formatted executive report.
+                  error:
+                    type: string
+                    nullable: true
+                  traceId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/quiz-feedback:
+    post:
+      summary: Check Challenge Outcome and Generate Smart Educational Feedback
+      description: Leverages the LLM to inspect user response selections, scenario context, and difficulty levels, returning deep pedagogical guidance.
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizFeedbackPayload'
+      responses:
+        '200':
+          description: Feedback analysis generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      feedback:
+                        type: string
+                  error:
+                    type: string
+                    nullable: true
+                  traceId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/advise:
+    post:
+      summary: Evaluate Selected Powers on Mission Scenarios (Jedi Wisdom Advisory)
+      description: Interprets tactical user rationale matching specific AI Powers to solve localized business/mission context, returning Master recommendation details.
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvisePayload'
+      responses:
+        '200':
+          description: Mission advisory structured report generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      advice:
+                        type: string
+                  error:
+                    type: string
+                    nullable: true
+                  traceId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/rewrite:
+    post:
+      summary: Elevate Rationale Writing to Executive-Grade Output
+      description: Translates rough technical draft layouts into structured, metric-hardened executive communication blocks with contextual frameworks.
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RewritePayload'
+      responses:
+        '200':
+          description: Refined copy ready for production
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      rewrittenText:
+                        type: string
+                  error:
+                    type: string
+                    nullable: true
+                  traceId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    FirebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Pass the certified Firebase client ID token within the Authorization Bearer header.
+
+  schemas:
+    GerarRelatorioPayload:
+      type: object
+      required:
+        - email
+        - xp
+        - unlockedPowers
+        - completedMissions
+      properties:
+        email:
+          type: string
+          format: email
+          example: nomura.eduardo@gmail.com
+        xp:
+          type: integer
+          minimum: 0
+          example: 12500
+        unlockedPowers:
+          type: array
+          items:
+            type: string
+          example: ["pwr_prompting", "pwr_copilot", "pwr_agents"]
+        completedMissions:
+          type: object
+          additionalProperties:
+            type: boolean
+          example:
+            mission_finance: true
+            mission_marketing: false
+        skillsSurvey:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: object
+            required:
+              - current
+              - target
+            properties:
+              current:
+                type: integer
+                minimum: 1
+                maximum: 5
+                example: 2
+              target:
+                type: integer
+                minimum: 1
+                maximum: 5
+                example: 4
+
+    QuizFeedbackPayload:
+      type: object
+      required:
+        - scenario
+        - correctAnswer
+        - selectedAnswer
+        - level
+      properties:
+        scenario:
+          type: string
+          minLength: 5
+          example: "Você precisa processar 15 páginas de um relatório financeiro..."
+        correctAnswer:
+          type: string
+          example: "pwr_rag"
+        selectedAnswer:
+          type: string
+          example: "pwr_prompts"
+        level:
+          type: string
+          example: "JEDI"
+
+    AdvisePayload:
+      type: object
+      required:
+        - mission
+        - selectedPowers
+        - userExplanation
+      properties:
+        mission:
+          type: object
+          required:
+            - id
+            - title
+            - subtitle
+            - context
+            - reflection
+          properties:
+            id:
+              type: string
+              example: "mission_marketing"
+            title:
+              type: string
+              example: "Operação Campanha Veloz"
+            subtitle:
+              type: string
+              example: "Segmentação automática de leads com LLMs"
+            context:
+              type: string
+              example: "Mailing desorganizado necessitando classificação..."
+            reflection:
+              type: string
+              example: "Qual a melhor estratégia para conectar múltiplos modelos?"
+            recommendedPowerIds:
+              type: array
+              items:
+                type: string
+              example: ["pwr_agents", "pwr_custom_llm"]
+            advisorHint:
+              type: string
+              example: "Pense em encadeamento estruturado."
+        selectedPowers:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - title
+            properties:
+              id:
+                type: string
+                example: "pwr_agents"
+              title:
+                type: string
+                example: "Orquestradores Autônomos"
+        userExplanation:
+          type: string
+          minLength: 5
+          example: "Irei utilizar orquestradores para ler e classificar de forma paralela."
+
+    RewritePayload:
+      type: object
+      required:
+        - mission
+        - selectedPowers
+      properties:
+        mission:
+          type: object
+          required:
+            - id
+            - title
+            - subtitle
+            - context
+          properties:
+            id:
+              type: string
+              example: "mission_marketing"
+            title:
+              type: string
+              example: "Operação Campanha Veloz"
+            subtitle:
+              type: string
+              example: "Segmentação automática"
+            context:
+              type: string
+              example: "Mailing desorganizado necessitando classificação..."
+        selectedPowers:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - title
+            properties:
+              id:
+                type: string
+                example: "pwr_agents"
+              title:
+                type: string
+                example: "Orquestradores Autônomos"
+        currentExplanation:
+          type: string
+          example: "Quero usar agentes para segmentar tudo."
+
+  responses:
+    BadRequest:
+      description: Provided payload failed structural verification.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Corpo da requisição inválido."
+              details:
+                type: object
+              traceId:
+                type: string
+
+    Unauthorized:
+      description: missing, expired, or malformed ID Token.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Sem autorização: Token ID ausente ou inválido."
+              traceId:
+                type: string
+
+    Forbidden:
+      description: Sufficient permissions or Administrative roles are not met.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Acesso administrativo restrito exigido."
+              traceId:
+                type: string
+
+    TooManyRequests:
+      description: The client has exceeded the requested rate limit thresholds.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Limite de solicitações atingido. Por favor, aguarde um minuto antes de tentar novamente."
+              traceId:
+                type: string
+
+    InternalServerError:
+      description: Server experienced processing fault or third-party API outage.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Erro de processamento na geração do relatório."
+              traceId:
+                type: string

@@ -28,6 +28,15 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { signOut } from 'firebase/auth';
 import { DashboardSection } from './components/DashboardSection';
 
+// Modular child components
+import { Navigation } from './components/Navigation';
+import { HomeSectionView } from './components/HomeSectionView';
+import { QuizSectionView } from './components/QuizSectionView';
+import { LevelSelectionView } from './components/LevelSelectionView';
+import { MissionsSectionView } from './components/MissionsSectionView';
+import { DeckSectionView } from './components/DeckSectionView';
+import { AdminSectionView } from './components/AdminSectionView';
+
 type GameState = 'home' | 'level-selection' | 'game' | 'deck' | 'results' | 'missions' | 'dashboards' | 'admin' | 'autoconhecimento';
 
 interface Company {
@@ -360,12 +369,6 @@ export default function App() {
         if (docSnap.exists()) {
           const data = docSnap.data() as UserProfile;
           
-          // Auto-promote the requested user to admin if they are not yet (case-insensitive)
-          if (user.email?.toLowerCase() === 'nomura.eduardo@gmail.com' && !data.isAdmin) {
-            console.log("Auto-promoting nomura.eduardo@gmail.com to admin...");
-            updateDoc(userDocRef, { isAdmin: true }).catch(e => console.error("Admin promote fail:", e));
-          }
-
           setUserProfile(data);
           setScore(data.xp || 0);
           setUnlockedPowers(data.unlockedPowers || []);
@@ -760,9 +763,13 @@ export default function App() {
     // Call AI Feedback API
     setIsAiFeedbackLoading(true);
     try {
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
       const response = await fetch('/api/quiz-feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': idToken ? `Bearer ${idToken}` : '',
+        },
         body: JSON.stringify({
           scenario: currentChallenge.scenario,
           correctAnswer: correctPowerData?.title || 'Desconhecida',
@@ -907,208 +914,17 @@ export default function App() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-zello-orange/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       {/* Navigation */}
-      <nav className="h-20 border-b border-white/5 px-6 md:px-12 flex items-center justify-between bg-zello-black/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setGameState('home')}>
-          <div className="w-10 h-10 bg-zello-orange rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(240,90,40,0.4)]">
-            <Zap className="text-white fill-white" size={24} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-black italic tracking-tighter leading-none text-white">JORNADA JEDI</span>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] font-bold text-zello-orange uppercase tracking-widest leading-none">A FORÇA ESTÁ COM VOCÊ</span>
-              {currentCompany && (
-                <>
-                  <div className="w-1 h-1 rounded-full bg-white/20"></div>
-                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">{currentCompany.name}</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 md:gap-8">
-          <div className="hidden md:flex items-center gap-2">
-            <button 
-              onClick={() => setGameState('deck')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${gameState === 'deck' ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
-            >
-              Deck
-            </button>
-            <button 
-              onClick={() => setGameState('level-selection')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${gameState === 'level-selection' ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
-            >
-              Quizzes
-            </button>
-            <button 
-              onClick={() => setGameState('missions')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${gameState === 'missions' ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
-            >
-              Missões
-            </button>
-            <button 
-              onClick={() => setGameState('dashboards')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${gameState === 'dashboards' ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
-            >
-              Dashboard
-            </button>
-            {/* Perfil menu option removed */}
-            {true && (
-              <button 
-                onClick={() => userProfile?.isAdmin && setGameState('admin')}
-                disabled={!userProfile?.isAdmin}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${gameState === 'admin' ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'} disabled:opacity-25 disabled:cursor-not-allowed`}
-                title={!userProfile?.isAdmin ? "Acesso exclusivo para Administradores" : "Painel do Administrador"}
-              >
-                Admin
-              </button>
-            )}
-          </div>
-          <button 
-            onClick={() => signOut(auth)}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-xs font-bold"
-          >
-            <LogOut size={14} />
-            Sair
-          </button>
-          <div className="hidden md:flex flex-col items-end">
-            <span className="text-[10px] text-zello-orange font-bold uppercase tracking-widest leading-none">Rank Atual</span>
-            <span className={`text-sm font-black uppercase italic ${currentRank.color}`}>{currentRank.name}</span>
-          </div>
-          <div className="hidden md:flex flex-col items-center px-4 py-2 bg-zello-orange/10 rounded-2xl border border-zello-orange/20 min-w-[100px]">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zello-orange/60 leading-none">XP Total</span>
-            <span className="text-lg font-black text-zello-orange tabular-nums">{score.toLocaleString()}</span>
-          </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden flex items-center justify-center p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-            aria-label="Abrir menu"
-          >
-            {isMobileMenuOpen ? <LucideIcons.X size={20} /> : <LucideIcons.Menu size={20} />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            key="mobile-menu"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="md:hidden fixed top-20 left-0 right-0 bottom-0 bg-zello-black/95 backdrop-blur-md border-b border-white/5 flex flex-col justify-between py-8 px-6 overflow-y-auto z-40"
-          >
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setGameState('home');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'home' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-              >
-                <span>Início</span>
-                <LucideIcons.ChevronRight size={16} className={gameState === 'home' ? 'text-zello-orange' : 'text-slate-500'} />
-              </button>
-              
-              <button
-                onClick={() => {
-                  setGameState('deck');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'deck' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-              >
-                <span>Deck</span>
-                <LucideIcons.ChevronRight size={16} className={gameState === 'deck' ? 'text-zello-orange' : 'text-slate-500'} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setGameState('level-selection');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'level-selection' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-              >
-                <span>Quizzes</span>
-                <LucideIcons.ChevronRight size={16} className={gameState === 'level-selection' ? 'text-zello-orange' : 'text-slate-500'} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setGameState('missions');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'missions' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-              >
-                <span>Missões</span>
-                <LucideIcons.ChevronRight size={16} className={gameState === 'missions' ? 'text-zello-orange' : 'text-slate-500'} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setGameState('dashboards');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'dashboards' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-              >
-                <span>Dashboard</span>
-                <LucideIcons.ChevronRight size={16} className={gameState === 'dashboards' ? 'text-zello-orange' : 'text-slate-500'} />
-              </button>
-
-              {userProfile?.isAdmin && (
-                <button
-                  onClick={() => {
-                    setGameState('admin');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between ${gameState === 'admin' ? 'bg-zello-orange/10 border border-zello-orange/30 text-zello-orange' : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'}`}
-                >
-                  <span>Admin</span>
-                  <LucideIcons.ChevronRight size={16} className={gameState === 'admin' ? 'text-zello-orange' : 'text-slate-500'} />
-                </button>
-              )}
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  signOut(auth);
-                }}
-                className="w-full py-4 px-6 rounded-2xl text-left text-sm font-black uppercase tracking-wider transition-all flex items-center justify-between bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 cursor-pointer"
-              >
-                <span>Sair</span>
-                <LucideIcons.LogOut size={16} className="text-red-400" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-5 pt-5 border-t border-white/5">
-              <div className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-2xl">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-zello-orange font-bold uppercase tracking-widest leading-none">Rank Atual</span>
-                  <span className={`text-sm font-black uppercase italic mt-1.5 ${currentRank.color}`}>{currentRank.name}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none block">Empresa</span>
-                  <span className="text-xs font-black text-white uppercase tracking-wider mt-1.5 block">
-                    {currentCompany?.name || '---'}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  signOut(auth);
-                }}
-                className="w-full py-4 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-all text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-pointer"
-              >
-                <LucideIcons.LogOut size={16} />
-                Sair da Conta
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Navigation
+        gameState={gameState}
+        setGameState={setGameState}
+        score={score}
+        currentCompany={currentCompany}
+        isAdmin={!!userProfile?.isAdmin}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        onLogout={() => signOut(auth)}
+        currentRank={currentRank}
+      />
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 overflow-y-auto custom-scrollbar pb-32">
@@ -1774,1148 +1590,72 @@ export default function App() {
           )}
 
           {gameState === 'home' && (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              className="min-h-full flex flex-col items-center justify-center p-8 text-center space-y-12 max-w-4xl mx-auto"
-            >
-              <div className="space-y-6">
-                {/* Mobile XP Total element below top navigation */}
-                <div className="md:hidden inline-flex flex-col items-center px-6 py-2 bg-zello-orange/10 rounded-2xl border border-zello-orange/20 min-w-[125px] max-w-fit mx-auto mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zello-orange/60 leading-none">XP Total</span>
-                  <span className="text-xl font-black text-zello-orange tabular-nums mt-1">{score.toLocaleString()}</span>
-                </div>
-
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zello-orange/10 border border-zello-orange/20 text-zello-orange text-xs font-black uppercase tracking-widest">
-                  <Star size={14} className="fill-zello-orange" />
-                  Jornada de Aprendizado
-                </div>
-                <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none text-white uppercase italic">
-                  DOMINE A <br/> <span className="text-zello-orange">FORÇA DA IA</span>
-                </h1>
-                <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-                  Três dimensões para você explorar: Deck de Habilidades, Quizzes de Conhecimento e Missões Táticas.
-                </p>
-                <div className="flex justify-center pt-2 w-full">
-                  <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07]">
-                    <div className="relative">
-                      {/* Outer spinning ring / glow */}
-                      <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
-                      <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
-                        <img 
-                          src="/Mestre Nomura.png"
-                          alt="Mestre Nomura"
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover object-top"
-                        />
-                        {/* Glowing orange lightsaber beam overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
-                      </div>
-                      
-                      {/* Lightsaber Active Badge */}
-                      <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
-                        <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
-                      </div>
-                    </div>
-                    
-                    <div className="text-center sm:text-left space-y-2 flex-1">
-                      <div className="flex items-center justify-center sm:justify-start gap-2">
-                        <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      </div>
-                      <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5">Mestre Nomura</h3>
-                      <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-                        "Treine a sua mente e domine o poder da inteligência artificial para conquistar novos patamares!"
-                      </p>
-                      
-                      <div className="pt-2">
-                        <button
-                          onClick={() => setActiveVideo({
-                            title: 'Como Funciona a Jornada?',
-                            url: 'https://www.youtube.com/embed/vq01pL4Hjoc?rel=0'
-                          })}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
-                        >
-                          <LucideIcons.Play size={10} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
-                          Como Funciona a Jornada?
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
-                <button
-                  onClick={() => setGameState('deck')}
-                  className="group relative flex flex-col items-start gap-4 p-8 bg-white/5 border border-white/10 hover:border-zello-orange/50 rounded-3xl transition-all duration-300 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-10 transition-opacity text-white">
-                    <LucideIcons.LayoutGrid size={120} />
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-zello-orange/10 transition-colors">
-                    <LucideIcons.LayoutGrid className="text-slate-400 group-hover:text-zello-orange" size={32} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-black text-3xl text-slate-200 uppercase italic tracking-tighter group-hover:text-white">Deck</div>
-                    <div className="text-slate-500 font-medium">Colecione habilidades</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setGameState('level-selection')}
-                  className="group relative flex flex-col items-start gap-4 p-8 bg-zello-orange hover:brightness-110 rounded-3xl transition-all duration-300 shadow-[0_0_50px_-10px_rgba(240,90,40,0.4)] border border-white/20 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:scale-110 transition-transform">
-                    <LucideIcons.Gamepad2 size={120} />
-                  </div>
-                  <div className="p-4 bg-white/10 rounded-2xl">
-                    <LucideIcons.Gamepad2 className="text-white" size={32} />
-                  </div>
-                  <div className="text-left relative z-10">
-                    <div className="font-black text-3xl uppercase italic tracking-tighter text-white">Quizzes</div>
-                    <div className="text-white/70 font-medium">Cenários de múltipla escolha</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setGameState('missions')}
-                  className="group relative flex flex-col items-start gap-4 p-8 bg-white/5 border border-white/10 hover:border-zello-orange/50 rounded-3xl transition-all duration-300 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-10 transition-opacity text-white">
-                    <Target size={120} />
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-zello-orange/10 transition-colors">
-                    <Target className="text-slate-400 group-hover:text-zello-orange" size={32} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-black text-3xl text-slate-200 uppercase italic tracking-tighter group-hover:text-white">Missões</div>
-                    <div className="text-slate-500 font-medium">Resolva desafios reais</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setGameState('dashboards')}
-                  className="md:col-span-3 group relative flex items-center justify-between gap-4 p-8 bg-white/5 border border-white/10 hover:border-zello-orange/50 rounded-3xl transition-all duration-300 overflow-hidden"
-                >
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-zello-orange/10 transition-colors">
-                      <LucideIcons.BarChart3 className="text-slate-400 group-hover:text-zello-orange" size={32} />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-black text-3xl text-slate-200 uppercase italic tracking-tighter group-hover:text-white">Dashboard</div>
-                      <div className="text-slate-500 font-medium">Acompanhe sua maturidade e a força da sua turma</div>
-                    </div>
-                  </div>
-                  <LucideIcons.ArrowRight className="text-slate-500 group-hover:text-zello-orange transition-all group-hover:translate-x-2" size={32} />
-                </button>
-              </div>
-            </motion.div>
+            <HomeSectionView
+              key="home-section-view-call"
+              score={score}
+              setGameState={setGameState}
+              onWatchVideo={(title, url) => setActiveVideo({ title, url })}
+            />
           )}
 
           {gameState === 'level-selection' && (
-            <motion.div
-              key="level-selection"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-[1400px] mx-auto p-8 space-y-12"
-            >
-              <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
-                <div className="space-y-4 text-center lg:text-left flex-1">
-                  <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Escolha seu Quiz</h2>
-                  <p className="text-slate-400 font-medium">Selecione o nível de dificuldade e a quantidade de perguntas</p>
-                  
-                  <div className="flex flex-wrap gap-4 items-center justify-center lg:justify-start">
-                    <div className="flex items-center gap-6 bg-white/5 p-4 rounded-3xl border border-white/10 w-fit">
-                      <span className="text-xs font-black uppercase tracking-widest text-zello-orange shrink-0">Nº PERGUNTAS:</span>
-                      <div className="flex items-center gap-2">
-                        {[1, 3, 5, 10].map((num) => (
-                          <button
-                            key={`q-count-${num}`}
-                            onClick={() => setQuestionCount(num)}
-                            className={`w-10 h-10 rounded-xl font-black transition-all ${questionCount === num ? 'bg-zello-orange text-white shadow-[0_0_15px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-500 hover:text-white'}`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                        <input 
-                          type="range" 
-                          min="1" 
-                          max="10" 
-                          value={questionCount}
-                          onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                          className="ml-4 accent-zello-orange"
-                        />
-                        <span className="w-8 text-center font-black text-zello-orange">{questionCount}</span>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={() => setGameState('home')}
-                      className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
-                    >
-                      Voltar
-                    </button>
-                  </div>
-                </div>
-
-                {/* Arte da Chamada do Vídeo do Mestre Nomura */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
-                  <div className="relative shrink-0">
-                    <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
-                    <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
-                      <img 
-                        src="/Mestre Nomura.png"
-                        alt="Mestre Nomura"
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover object-top"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
-                      <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
-                    </div>
-                  </div>
-                  
-                  <div className="text-center sm:text-left space-y-2 flex-1">
-                    <div className="flex items-center justify-center sm:justify-start gap-2">
-                      <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    </div>
-                    <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
-                    <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-                      "Dê o primeiro passo para testar seus conhecimentos. O aprendizado real vem dos desafios superados. Que a força esteja com você!"
-                    </p>
-                    
-                    <div className="pt-2">
-                      <button
-                        onClick={() => setActiveVideo({
-                          title: 'Como Funciona o Quiz?',
-                          url: 'https://www.youtube.com/embed/ImwqltRINI8?rel=0'
-                        })}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
-                      >
-                        <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
-                        Como Funciona o Quiz?
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {(['PADAWAN', 'JEDI', 'YODA'] as const).map((level, lIdx) => (
-                  <button
-                    key={`lvl-sel-final-${level}-${lIdx}`}
-                    onClick={() => startLevel(level)}
-                    className="group relative flex flex-col items-center gap-6 p-10 rounded-[32px] bg-white/5 border border-white/10 hover:border-zello-orange/50 transition-all duration-500 overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-b from-zello-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="w-32 h-32 rounded-full border-4 border-zello-orange/20 p-2 overflow-hidden group-hover:scale-110 transition-transform bg-zello-black/40">
-                      <img 
-                        src={RANKS[level].image} 
-                        alt={RANKS[level].name}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    </div>
-                    <div className="text-center relative z-10">
-                      <h3 className={`text-2xl font-black uppercase italic transition-colors ${RANKS[level].color}`}>
-                        {RANKS[level].name}
-                      </h3>
-                      <p className="text-sm text-slate-400 mt-2 font-medium">
-                        {RANKS[level].description}
-                      </p>
-                    </div>
-                    <div className="mt-4 px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-zello-orange group-hover:border-zello-orange transition-colors">
-                      Iniciar Quiz
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex justify-center">
-                <button 
-                  onClick={() => setGameState('home')}
-                  className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
-                >
-                  Voltar ao Início
-                </button>
-              </div>
-            </motion.div>
+            <LevelSelectionView
+              key="level-selection-view-call"
+              questionCount={questionCount}
+              setQuestionCount={setQuestionCount}
+              setGameState={setGameState}
+              onWatchVideo={(title, url) => setActiveVideo({ title, url })}
+              startLevel={startLevel}
+            />
           )}
 
           {gameState === 'game' && (
-            <motion.div 
-              key="game"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="max-w-[1400px] mx-auto space-y-8"
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white">
-                      Desafio {currentChallenge.title}
-                    </h3>
-                    <button
-                      onClick={() => setActiveVideo({
-                        title: 'Quizzes (Desafios)',
-                        url: 'https://www.youtube.com/embed/cl00Nor2OAk?rel=0'
-                      })}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 hover:border-zello-orange/30 text-[10px] text-slate-400 hover:text-white font-bold uppercase tracking-widest rounded-full transition-all cursor-pointer group"
-                    >
-                      <LucideIcons.Play size={8} className="fill-slate-400 group-hover:fill-white text-slate-400 group-hover:text-white" />
-                      Como Funciona o Quiz
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    {levelChallenges.map((_, idx) => (
-                      <div 
-                        key={`ch-prog-dot-final-${selectedLevel}-${idx}`} 
-                        className={`h-1.5 rounded-full transition-all duration-500 ${
-                          idx === currentChallengeIndex ? 'w-12 bg-zello-orange' : 
-                          idx < currentChallengeIndex ? 'w-6 bg-zello-orange/40' : 'w-6 bg-white/10'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className={`px-6 py-3 rounded-2xl border transition-all flex items-center gap-4 ${timeLeft < 10 ? 'bg-red-500/10 border-red-500/50' : 'bg-white/5 border-white/10'}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${timeLeft < 10 ? 'bg-red-500/20' : 'bg-zello-orange/20'}`}>
-                      <LucideIcons.Timer className={timeLeft < 10 ? 'text-red-500' : 'text-zello-orange'} size={16} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block leading-none">Tempo</span>
-                      <span className={`text-lg font-black tabular-nums ${timeLeft < 10 ? 'text-red-500' : 'text-white'}`}>{timeLeft}s</span>
-                    </div>
-                  </div>
-
-                  <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-zello-orange/20 flex items-center justify-center">
-                      <Target className="text-zello-orange" size={16} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block leading-none">Progresso</span>
-                      <span className="text-lg font-black text-white">{currentChallengeIndex + 1} / {levelChallenges.length}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-3 gap-12 items-start">
-                <div className="lg:col-span-2 space-y-8">
-                  <div className="p-8 md:p-12 bg-white/5 border border-white/10 rounded-[32px] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-zello-orange"></div>
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-zello-orange/10 rounded-lg">
-                          <ShieldAlert className="text-zello-orange" size={24} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-[0.2em] text-zello-orange">Cenário de Operação</span>
-                      </div>
-                      <p className="text-2xl md:text-3xl font-bold leading-tight text-white tracking-tight italic">
-                        "{currentChallenge.scenario}"
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(() => {
-                      const options = AI_POWERS.filter(p => 
-                        [currentChallenge.correctPowerId, ...currentChallenge.distractors].includes(p.id)
-                      );
-                      
-                      // Ensure correct one is always there, and we have max 6 items
-                      const correct = options.find(p => p.id === currentChallenge.correctPowerId);
-                      const others = options.filter(p => p.id !== currentChallenge.correctPowerId);
-                      
-                      // Take up to 5 others to make a total of 6
-                      const rawOptions = [correct, ...others.slice(0, 5)].filter((p): p is AIPower => !!p);
-                      
-                      // Deduplicate by ID to guarantee rendering uniqueness
-                      const finalOptions = Array.from(new Map(rawOptions.map(p => [p.id, p])).values())
-                        .sort((a, b) => parseInt(a.id) - parseInt(b.id));
-
-                      return finalOptions.map((power, idx) => (
-                      <button
-                        key={`game-opt-btn-${currentChallenge.id}-${power.id}-${idx}`}
-                        disabled={isAnswered}
-                        onClick={() => handleAnswer(power.id)}
-                        className={`
-                          p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group h-32 flex flex-col justify-between
-                          ${isAnswered && power.id === currentChallenge.correctPowerId 
-                            ? 'bg-zello-orange/20 border-zello-orange ring-4 ring-zello-orange/20 shadow-[0_0_20px_rgba(240,90,40,0.4)]' 
-                            : isAnswered && selectedPower === power.id && power.id !== currentChallenge.correctPowerId
-                            ? 'bg-red-500/10 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]' 
-                            : isAnswered 
-                            ? 'bg-white/2 opacity-40 border-white/5'
-                            : 'bg-white/5 border-white/10 hover:border-zello-orange/50 hover:bg-white/10'
-                          }
-                        `}
-                      >
-                        <div className="relative z-10 flex flex-col h-full justify-between">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 group-hover:bg-zello-orange group-hover:text-white transition-colors ${isAnswered && power.id === currentChallenge.correctPowerId ? 'bg-zello-orange text-white' : ''}`}>
-                            {React.createElement((LucideIcons as any)[power.icon] || Zap, { size: 16 })}
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-0.5">{power.category}</span>
-                            <h4 className="text-sm font-bold text-white leading-tight">{power.title}</h4>
-                          </div>
-                        </div>
-                        {/* Status Dots */}
-                        {isAnswered && power.id === currentChallenge.correctPowerId && (
-                          <div className="absolute top-4 right-4 text-zello-orange">
-                            <LucideIcons.CheckCircle2 size={20} />
-                          </div>
-                        )}
-                      </button>
-                    ));
-                    })()}
-                  </div>
-
-                  {isAnswered && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-8 rounded-3xl bg-zello-orange text-white flex flex-col md:flex-row items-center justify-between gap-6"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/30">
-                          {selectedPower === currentChallenge.correctPowerId ? <Trophy size={32} /> : <LucideIcons.X size={32} />}
-                        </div>
-                        <div>
-                          <h4 className="text-2xl font-black uppercase italic leading-none">
-                            {selectedPower === currentChallenge.correctPowerId ? 'Excelente, Jedi!' : 'Treine mais, Padawan!'}
-                          </h4>
-                          <p className="text-white/80 font-medium text-sm mt-1">
-                            {selectedPower === currentChallenge.correctPowerId 
-                              ? `Explicação: ${currentChallenge.explanation}` 
-                              : 'Essa não era a resposta ideal para este cenário.'}
-                          </p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={nextChallenge}
-                        className="px-8 py-4 bg-white text-zello-orange font-black uppercase tracking-widest text-xs rounded-xl hover:bg-slate-100 transition-colors whitespace-nowrap active:scale-95"
-                      >
-                        {currentChallengeIndex === levelChallenges.length - 1 ? 'Finalizar Missão' : 'Próximo Desafio'}
-                      </button>
-                    </motion.div>
-                  )}
-                </div>
-
-                <div className="hidden lg:block space-y-6">
-                  <div className="p-6 bg-white/5 border border-white/10 rounded-3xl min-h-[200px] flex flex-col">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange mb-4">Seu Mentor Diz:</h4>
-                    <div className="flex-1">
-                      {isAiFeedbackLoading ? (
-                        <div className="flex flex-col gap-2 animate-pulse">
-                          <div className="h-3 bg-white/10 rounded w-full"></div>
-                          <div className="h-3 bg-white/10 rounded w-5/6"></div>
-                          <div className="h-3 bg-white/10 rounded w-4/6"></div>
-                        </div>
-                      ) : (
-                        <p className="text-sm italic text-slate-400 leading-relaxed">
-                          {isAnswered 
-                            ? (aiFeedback || currentChallenge.explanation)
-                            : "Para cada desafio, uma habilidade específica de IA deve ser aplicada. Pense no objetivo final do negócio antes de escolher o algoritmo."}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 mt-6 pt-6 border-t border-white/5">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-emerald-500/20 relative border border-emerald-500/30">
-                        <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                        {isAiFeedbackLoading && (
-                          <div className="absolute inset-0 bg-emerald-500/40 flex items-center justify-center">
-                            <LucideIcons.Loader2 className="text-white animate-spin" size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs font-bold text-white">Mestre Nomura</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <QuizSectionView
+              key="quiz-section-view-call"
+              levelChallenges={levelChallenges}
+              currentChallengeIndex={currentChallengeIndex}
+              currentChallenge={currentChallenge}
+              selectedLevel={selectedLevel}
+              score={score}
+              selectedPower={selectedPower}
+              isAnswered={isAnswered}
+              timeLeft={timeLeft}
+              aiFeedback={aiFeedback}
+              isAiFeedbackLoading={isAiFeedbackLoading}
+              handleSelection={handleAnswer}
+              nextChallenge={nextChallenge}
+              setActiveVideo={setActiveVideo}
+            />
           )}
 
           {gameState === 'missions' && (
-            <motion.div 
-              key="missions"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-[1400px] mx-auto space-y-12 p-6 md:p-12"
-            >
-              {!selectedMission ? (
-                <div key="mission-list-container" className="space-y-12">
-                  <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
-                    <div className="space-y-4 text-center lg:text-left flex-1 font-sans">
-                      <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">Missões Táticas</h2>
-                      <p className="text-slate-400 font-medium">Selecione uma missão para explorar cenários reais de aplicação de IA</p>
-                      
-                      <div className="flex justify-center lg:justify-start">
-                        <button 
-                          onClick={() => setGameState('home')}
-                          className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
-                        >
-                          Voltar ao Início
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Arte da Chamada do Vídeo do Mestre Nomura */}
-                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
-                      <div className="relative shrink-0">
-                        <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
-                        <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
-                          <img 
-                            src="/Mestre Nomura.png"
-                            alt="Mestre Nomura"
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover object-top"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
-                          <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
-                        </div>
-                      </div>
-                      
-                      <div className="text-center sm:text-left space-y-2 flex-1">
-                        <div className="flex items-center justify-center sm:justify-start gap-2">
-                          <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Jedi Mentor</span>
-                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        </div>
-                        <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
-                        <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-                          "As missões táticas vão exigir foco e sabedoria. Conecte as melhores ferramentas de IA da sua coleção para resolver casos práticos e reais!"
-                        </p>
-                        
-                        <div className="pt-2">
-                          <button
-                            onClick={() => setActiveVideo({
-                              title: 'Como Funcionam as Missões?',
-                              url: 'https://www.youtube.com/embed/G1rbjZL8o8E?rel=0'
-                            })}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn"
-                          >
-                            <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
-                            Como Funcionam as Missões?
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {MISSIONS.map((mission, idx) => (
-                      <button
-                        key={`msn-card-list-v4-${mission.id}-${idx}`}
-                        onClick={() => setSelectedMission(mission)}
-                        className={`group relative p-8 bg-white/5 border rounded-3xl text-left transition-all duration-300 overflow-hidden ${
-                          completedMissions[mission.id] 
-                            ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_30px_rgba(34,197,94,0.1)]' 
-                            : 'border-white/10 hover:border-zello-orange/50'
-                        }`}
-                      >
-                        <div className="relative z-10 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">{mission.title}</div>
-                            {completedMissions[mission.id] && (
-                              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full">
-                                <LucideIcons.CheckCircle2 className="text-green-500" size={12} />
-                                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Concluída</span>
-                              </div>
-                            )}
-                          </div>
-                          <h4 className="text-2xl font-black text-white italic leading-tight uppercase group-hover:text-zello-orange transition-colors">{mission.subtitle}</h4>
-                          <div className="flex items-center gap-2 text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-4">
-                            Ver Detalhes <LucideIcons.ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                          </div>
-                        </div>
-                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <Target size={80} />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div key={`mission-details-${selectedMission.id}`} className="space-y-12">
-                  <button 
-                    onClick={() => setSelectedMission(null)}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
-                  >
-                    <LucideIcons.ArrowLeft size={16} />
-                    <span className="text-xs font-black uppercase tracking-widest">Voltar para Missões</span>
-                  </button>
-
-                  <div className="grid lg:grid-cols-3 gap-12">
-                    <div className="lg:col-span-2 space-y-12">
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-zello-orange rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(240,90,40,0.4)]">
-                            <Target className="text-white" size={24} />
-                          </div>
-                          <div>
-                            <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">{selectedMission.title}</div>
-                            <h2 className="text-4xl md:text-5xl font-black text-white italic leading-tight uppercase">{selectedMission.subtitle}</h2>
-                          </div>
-                        </div>
-
-                        <div className="p-8 md:p-12 bg-white/5 border border-white/10 rounded-[32px] space-y-8 relative overflow-hidden">
-                          <div className="absolute top-0 left-0 w-1 h-full bg-zello-orange"></div>
-                          <div className="space-y-4">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">Contexto da Missão</h4>
-                            <p className="text-xl md:text-2xl font-medium leading-relaxed text-slate-200">
-                              {selectedMission.context}
-                            </p>
-                            {selectedMission.items.length > 0 && (
-                              <ul className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-                                {selectedMission.items.map((item, idx) => (
-                                  <li key={`msn-item-f-${selectedMission.id}-${idx}`} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 text-sm font-bold text-slate-400">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-zello-orange" />
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-
-                          <div className="pt-8 border-t border-white/5 space-y-4">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">O grupo deverá refletir:</h4>
-                            <p className="text-2xl md:text-3xl font-black italic text-white leading-tight">
-                              "{selectedMission.reflection}"
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-8">
-                          <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">Resultado Esperado</h4>
-                            <ul className="space-y-4">
-                              {selectedMission.expectedResults.map((result, idx) => (
-                                <li key={`msn-res-f-${selectedMission.id}-${idx}`} className="flex items-start gap-4">
-                                  <div className="w-6 h-6 rounded-lg bg-zello-orange/10 flex items-center justify-center shrink-0 mt-0.5">
-                                    <Star size={12} className="text-zello-orange fill-zello-orange" />
-                                  </div>
-                                  <span className="text-slate-400 font-medium leading-relaxed">{result}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">Maturidade & Evolução</h4>
-                            <div className="space-y-4">
-                              <p className="text-sm text-slate-400 font-medium leading-relaxed">
-                                Esta missão avalia sua capacidade de conectar objetivos de negócio com tecnologias de IA. 
-                              </p>
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                  <span>Dificuldade</span>
-                                  <span className="text-zello-orange">Avançado</span>
-                                </div>
-                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                  <div className="w-3/4 h-full bg-zello-orange" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-8">
-                      <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">Seleção dos Cards</h4>
-                          <span className="px-2 py-1 bg-zello-orange/20 rounded-md text-[10px] font-bold text-zello-orange uppercase tracking-widest">Obrigatório</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4" key={`mission-slots-container-${selectedMission.id}`}>
-                          {[0, 1, 2, 3].map((slotIdx) => {
-                            const currentMissionId = selectedMission?.id || 'none';
-                            const powerId = selectedMission ? missionCards[selectedMission.id]?.[slotIdx] : null;
-                            const power = powerId ? AI_POWERS.find(p => p.id === powerId) : null;
-
-                            return (
-                              <button
-                                key={`mission-slot-unique-${currentMissionId}-${slotIdx}`}
-                                onClick={() => {
-                                  setIsSelectingForMission(true);
-                                  setGameState('deck');
-                                }}
-                                className={`aspect-[4/5] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-4 transition-all group relative overflow-hidden ${
-                                  power 
-                                    ? 'border-zello-orange/50 bg-zello-orange/5' 
-                                    : 'border-white/10 bg-white/5 hover:border-white/20'
-                                }`}
-                              >
-                                {power ? (
-                                  <>
-                                    <div className="text-zello-orange mb-2">
-                                      {React.createElement(LucideIcons[power.icon as keyof typeof LucideIcons] as any, { size: 24 })}
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight text-white">
-                                      {power.title}
-                                    </span>
-                                    <div 
-                                      className="absolute top-1 right-1 p-1 hover:text-white text-slate-500"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (selectedMission) {
-                                          const current = missionCards[selectedMission.id] || [];
-                                          const next = [...current];
-                                          next.splice(slotIdx, 1);
-                                          setMissionCards({ ...missionCards, [selectedMission.id]: next });
-                                        }
-                                      }}
-                                    >
-                                      <LucideIcons.X size={14} />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <LucideIcons.Plus className="text-slate-600 group-hover:text-slate-400 mb-2" size={20} />
-                                    <span className="text-[8px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-400">Add Card</span>
-                                  </>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                          <button 
-                            onClick={() => {
-                              if (selectedMission && (missionCards[selectedMission.id] || []).length > 0) {
-                                setIsPresentingDeck(true);
-                              } else {
-                                setIsSelectingForMission(true);
-                                setGameState('deck');
-                              }
-                            }}
-                            className="w-full py-4 bg-zello-orange text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.2)] hover:brightness-110 transition-all flex items-center justify-center gap-2"
-                          >
-                            <LucideIcons.LayoutGrid size={16} />
-                            {(selectedMission && (missionCards[selectedMission.id] || []).length > 0) ? 'Ver / Editar Deck' : 'Explorar Meu Deck'}
-                          </button>
-                        </div>
-
-                        <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange">Descrição da sua Solução</h4>
-                        </div>
-                        <div className="relative group">
-                          <textarea
-                            placeholder="Explique como você pretende usar as habilidades selecionadas para resolver esta missão..."
-                            className={`w-full bg-zello-black/40 border border-white/10 rounded-2xl p-6 text-slate-300 text-sm focus:border-zello-orange/50 transition-all min-h-[150px] outline-none ${isRewriting ? 'opacity-50 pointer-events-none' : ''}`}
-                            value={selectedMission ? userExplanations[selectedMission.id] || '' : ''}
-                            onChange={(e) => {
-                              if (selectedMission) {
-                                setUserExplanations(prev => ({ ...prev, [selectedMission.id]: e.target.value }));
-                              }
-                            }}
-                          />
-                          {isRewriting && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-zello-black/20 backdrop-blur-[2px] rounded-2xl">
-                              <div className="flex flex-col items-center gap-2">
-                                <LucideIcons.Loader2 className="animate-spin text-zello-orange" size={24} />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zello-orange animate-pulse">Assistente elaborando descrição...</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          disabled={isRewriting || !selectedMission || (missionCards[selectedMission.id] || []).length === 0}
-                          onClick={async () => {
-                            if (!selectedMission) return;
-                            setIsRewriting(true);
-                            try {
-                              const powers = (missionCards[selectedMission.id] || []).map(id => AI_POWERS.find(p => p.id === id)).filter(Boolean);
-                              const resp = await fetch('/api/rewrite', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  mission: selectedMission,
-                                  selectedPowers: powers,
-                                  currentExplanation: userExplanations[selectedMission.id] || ''
-                                })
-                              });
-                              
-                              if (!resp.ok) {
-                                const errData = await resp.json();
-                                throw new Error(errData.error || 'Erro ao processar IA');
-                              }
-                              
-                              const data = await resp.json();
-                              if (data.rewrittenText) {
-                                setUserExplanations(prev => ({ ...prev, [selectedMission.id]: data.rewrittenText }));
-                              }
-                            } catch (e: any) {
-                              console.error(e);
-                              alert(`Erro: ${e.message}. Verifique as chaves de API nas configurações.`);
-                            } finally {
-                              setIsRewriting(false);
-                            }
-                          }}
-                          className="w-full py-4 bg-zello-orange/10 hover:bg-zello-orange/20 border border-zello-orange/30 rounded-2xl text-xs font-black uppercase tracking-widest text-zello-orange transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
-                        >
-                          {isRewriting ? (
-                            <>
-                              <LucideIcons.Loader2 className="animate-spin" size={16} />
-                              Elaborando redação...
-                            </>
-                          ) : (
-                            <>
-                              <img 
-                                src="https://static.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png" 
-                                alt="Mestre Yoda" 
-                                referrerPolicy="no-referrer" 
-                                className="w-5 h-5 rounded-full object-cover border border-zello-orange/35 group-hover:scale-110 transition-transform" 
-                              />
-                              Mestre Yoda: Ajude-me a descrever a solução
-                            </>
-                          )}
-                        </button>
-
-                        <button
-                          disabled={isAskingAdvisor || !selectedMission || (missionCards[selectedMission.id] || []).length === 0}
-                          onClick={async () => {
-                            if (!selectedMission) return;
-                            setIsAskingAdvisor(true);
-                            try {
-                              const powers = (missionCards[selectedMission.id] || []).map(id => AI_POWERS.find(p => p.id === id)).filter(Boolean);
-                              const resp = await fetch('/api/advise', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  mission: selectedMission,
-                                  selectedPowers: powers,
-                                  userExplanation: userExplanations[selectedMission.id] || ''
-                                })
-                              });
-
-                              if (!resp.ok) {
-                                const errorData = await resp.json();
-                                throw new Error(errorData.error || 'Erro ao consultar o mestre');
-                              }
-
-                              const data = await resp.json();
-                              if (data.advice) {
-                                setAdvisorResponses({ ...advisorResponses, [selectedMission.id]: data.advice });
-                                setIsAdvisorModalOpen(true);
-                              }
-                            } catch (e: any) {
-                              console.error(e);
-                              alert(`Erro: ${e.message || "Falha na conexão com a IA"}`);
-                            } finally {
-                              setIsAskingAdvisor(false);
-                            }
-                          }}
-                          className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
-                        >
-                          {isAskingAdvisor ? (
-                            <>
-                              <LucideIcons.Loader2 className="animate-spin" size={16} />
-                              Consultando Mestre Nomura...
-                            </>
-                          ) : (
-                            <>
-                              <img 
-                                src="/Mestre Nomura.png" 
-                                alt="Mestre Nomura" 
-                                referrerPolicy="no-referrer" 
-                                className="w-5 h-5 rounded-full object-cover border border-white/20 group-hover:scale-110 transition-transform" 
-                              />
-                              Mestre Nomura: Avaliar minha estratégia
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      <div className="flex gap-4 pt-4">
-                        <button
-                          onClick={async () => {
-                            if (!user || !selectedMission) return;
-                            setIsSaving(true);
-                            try {
-                              const userDocRef = doc(db, 'users', user.uid);
-                              await updateDoc(userDocRef, {
-                                [`missionProgress.${selectedMission.id}`]: {
-                                  cards: missionCards[selectedMission.id] || [],
-                                  explanation: userExplanations[selectedMission.id] || '',
-                                  updatedAt: new Date().toISOString()
-                                },
-                                lastActive: serverTimestamp(),
-                                updatedAt: serverTimestamp()
-                              });
-                              setCompletedMissions(prev => ({ ...prev, [selectedMission.id]: true }));
-                              setSelectedMission(null);
-                              alert("Progresso da missão salvo com sucesso!");
-                            } catch (e) {
-                              handleFirestoreError(e, OperationType.UPDATE, `users/${user.uid}`);
-                            } finally {
-                              setIsSaving(false);
-                            }
-                          }}
-                          className="flex-1 py-4 bg-zello-orange text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.2)] hover:brightness-110 transition-all flex items-center justify-center gap-2"
-                        >
-                          {isSaving ? <LucideIcons.Loader2 className="animate-spin" size={16} /> : <LucideIcons.Save size={16} />}
-                          SALVAR PROCESSO
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (selectedMission) {
-                              const nextCards = { ...missionCards };
-                              const nextExplanations = { ...userExplanations };
-                              delete nextCards[selectedMission.id];
-                              delete nextExplanations[selectedMission.id];
-                              setMissionCards(nextCards);
-                              setUserExplanations(nextExplanations);
-                            }
-                            setSelectedMission(null);
-                          }}
-                          className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
+            <MissionsSectionView
+              key="missions-section-view-call"
+              user={user}
+              completedMissions={completedMissions}
+              setCompletedMissions={setCompletedMissions}
+              missionCards={missionCards}
+              setMissionCards={setMissionCards}
+              userExplanations={userExplanations}
+              setUserExplanations={setUserExplanations}
+              advisorResponses={advisorResponses}
+              setAdvisorResponses={setAdvisorResponses}
+              selectedMission={selectedMission}
+              setSelectedMission={setSelectedMission}
+              setIsSelectingForMission={setIsSelectingForMission}
+              setIsPresentingDeck={setIsPresentingDeck}
+              setGameState={setGameState}
+              setActiveVideo={setActiveVideo}
+              isRewriting={isRewriting}
+              setIsRewriting={setIsRewriting}
+              isAskingAdvisor={isAskingAdvisor}
+              setIsAskingAdvisor={setIsAskingAdvisor}
+              isSaving={isSaving}
+              setIsSaving={setIsSaving}
+              setIsAdvisorModalOpen={setIsAdvisorModalOpen}
+              currentCompany={currentCompany}
+            />
           )}
-
-          <AnimatePresence>
-            {viewingPower && (
-              <motion.div
-                key="power-details-modal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zello-black/95 backdrop-blur-xl"
-              >
-                <motion.div
-                  initial={{ scale: 0.9, y: 20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.9, y: 20 }}
-                  className="w-full max-w-[1300px] max-h-[92vh] bg-zello-black border-2 border-zello-orange rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(240,90,40,0.3)] flex flex-col md:flex-row"
-                >
-                  {/* Left: Card Visual */}
-                  <div className="w-full md:w-[380px] relative h-48 md:h-auto shrink-0 border-r border-white/5">
-                    <img 
-                      src={viewingPower.image} 
-                      alt={viewingPower.title}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zello-black via-transparent to-transparent"></div>
-                    <div className="absolute top-6 left-6">
-                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-zello-orange/20 backdrop-blur-md border border-zello-orange/30 flex items-center justify-center text-zello-orange shadow-[0_0_20px_rgba(240,90,40,0.3)]">
-                          {React.createElement((LucideIcons as any)[viewingPower.icon] || LucideIcons.Zap, { size: 24 })}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-zello-orange uppercase tracking-[0.3em] leading-none">Habilidade</span>
-                          <span className="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">#{viewingPower.id.padStart(2, '0')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Detailed Info */}
-                  <div className="flex-1 flex flex-col min-w-0">
-                    <div className="flex-1 p-6 md:p-10 space-y-6 overflow-y-auto custom-scrollbar">
-                      <div className="space-y-3">
-                        <div className="px-3 py-1 bg-zello-orange/10 border border-zello-orange/20 rounded-full inline-block">
-                          <span className="text-[9px] font-black text-zello-orange uppercase tracking-widest">{viewingPower.category}</span>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tight leading-none">{viewingPower.title}</h2>
-                        <p className="text-slate-300 text-sm md:text-base leading-relaxed font-semibold">
-                          {viewingPower.detailedDescription || viewingPower.fullDescription}
-                        </p>
-                      </div>
-
-                      {viewingPower.detailedExamples && viewingPower.detailedExamples.length > 0 && (
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">Exemplos de Utilização</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {viewingPower.detailedExamples.map((example, idx) => (
-                              <div key={`power-example-${viewingPower.id}-${idx}`} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 group hover:border-zello-orange/30 transition-all flex flex-col">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-zello-orange group-hover:shadow-[0_0_10px_rgba(240,90,40,1)] transition-all"></div>
-                                  <h5 className="text-xs font-black text-white uppercase italic tracking-tight">{example.title}</h5>
-                                </div>
-                                <p className="text-slate-400 text-[11px] leading-relaxed flex-1">{example.description}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-6 md:p-8 pt-3 flex justify-end shrink-0 border-t border-white/5">
-                      <button
-                        onClick={() => setViewingPower(null)}
-                        className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
-                      >
-                        <LucideIcons.ArrowLeft size={14} />
-                        Voltar ao Deck
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {isPresentingDeck && selectedMission && (
-              <motion.div
-                key="presentation-deck-overlay"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[150] flex flex-col items-center p-6 bg-zello-black/95 backdrop-blur-2xl overflow-y-auto custom-scrollbar"
-              >
-                <div className="absolute top-8 right-8">
-                  <button 
-                    onClick={() => setIsPresentingDeck(false)}
-                    className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white transition-all"
-                  >
-                    <X size={32} />
-                  </button>
-                </div>
-
-                <div className="w-full max-w-[1600px] space-y-12 pb-24 px-4">
-                  <div className="text-center space-y-4">
-                    <div className="px-4 py-2 bg-zello-orange/10 border border-zello-orange/20 rounded-full inline-block">
-                      <span className="text-xs font-black text-zello-orange uppercase tracking-[0.3em]">{selectedMission.title}</span>
-                    </div>
-                    <h2 className="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">Deck de Apresentação</h2>
-                    <p className="text-slate-400 text-xl font-medium max-w-3xl mx-auto">Cards selecionados para a solução estratégica da missão.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-8">
-                    {(missionCards[selectedMission.id] || [])
-                      .map(id => AI_POWERS.find(p => p.id === id))
-                      .filter((p): p is AIPower => !!p)
-                      .map((power, idx, arr) => {
-                        return (
-                          <motion.div
-                            key={`present-deck-${selectedMission.id}-${power.id}-${idx}-${arr.length}`}
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="relative group cursor-pointer"
-                          >
-                            <SuperPowerCard 
-                              power={power} 
-                              isLocked={false} 
-                              onClick={() => setViewingPower(power)}
-                            />
-                            <div className="absolute bottom-4 right-4 w-10 h-10 bg-zello-orange rounded-xl flex items-center justify-center text-white font-black text-lg shadow-[0_0_20px_rgba(240,90,40,0.5)] z-40 border-2 border-white/20">
-                              {idx + 1}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                  </div>
-
-                  <div className="p-10 bg-white/5 border border-white/10 rounded-[40px] w-full">
-                    <h4 className="text-xs font-black text-zello-orange uppercase tracking-widest mb-4">Estratégia do Time:</h4>
-                    <p className="text-2xl md:text-4xl font-bold italic text-white leading-relaxed">
-                      "{userExplanations[selectedMission.id] || "Nenhuma descrição fornecida."}"
-                    </p>
-                  </div>
-
-                  <div className="flex justify-center pt-8">
-                    <div className="flex items-center gap-8 p-6 bg-white/5 rounded-full border border-white/10">
-                      <div className="flex flex-col items-center">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Votos</span>
-                        <div className="flex items-center gap-2">
-                          <LucideIcons.ThumbsUp className="text-zello-orange" size={24} />
-                          <span className="text-3xl font-black text-white tabular-nums">0</span>
-                        </div>
-                      </div>
-                      <div className="w-px h-12 bg-white/10"></div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</span>
-                        <span className="text-xl font-bold text-zello-orange uppercase tracking-tight">Em Avaliação</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center pt-12 pb-8">
-                    <button
-                      onClick={() => setIsPresentingDeck(false)}
-                      className="px-12 py-5 bg-zello-orange text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-[0_0_30px_rgba(240,90,40,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-3"
-                    >
-                      <LucideIcons.ArrowLeft size={20} />
-                      Voltar para a Missão
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {isAdvisorModalOpen && selectedMission && (
-              <motion.div
-                key="advisor-response-modal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zello-black/95 backdrop-blur-xl"
-              >
-                <motion.div
-                  initial={{ scale: 0.9, y: 20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.9, y: 20 }}
-                  className="w-full max-w-[1200px] max-h-[85vh] bg-zello-black border-2 border-zello-orange rounded-[40px] shadow-[0_0_100px_rgba(240,90,40,0.3)] relative overflow-hidden flex flex-col"
-                >
-                  <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                    <LucideIcons.Quote size={120} className="text-zello-orange" />
-                  </div>
-
-                  <div className="p-6 md:p-8 pb-3 relative z-10 shrink-0">
-                    <div className="flex flex-col md:flex-row md:items-center gap-6">
-                      <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-full border-4 border-zello-orange overflow-hidden bg-white/10 shadow-[0_0_30px_rgba(240,90,40,0.5)]">
-                        <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Recado do Mestre Nomura</div>
-                        <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight leading-none">{selectedMission.subtitle}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-6 relative z-10 custom-scrollbar">
-                    <div className="text-slate-200 text-sm md:text-base italic leading-relaxed whitespace-pre-line font-medium border-l-4 border-zello-orange pl-6 md:pl-10 py-1.5">
-                      {advisorResponses[selectedMission.id]}
-                    </div>
-                  </div>
-
-                  <div className="p-6 md:p-8 pt-3 flex justify-center shrink-0 border-t border-white/5 relative z-10">
-                    <button
-                      onClick={() => setIsAdvisorModalOpen(false)}
-                      className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
-                    >
-                      <LucideIcons.ArrowLeft size={16} />
-                      Voltar para a Missão
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {gameState === 'deck' && (
             <motion.div 
@@ -3143,6 +1883,230 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {viewingPower && (
+            <motion.div
+              key="power-details-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zello-black/95 backdrop-blur-xl"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="w-full max-w-[1300px] max-h-[92vh] bg-zello-black border-2 border-zello-orange rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(240,90,40,0.3)] flex flex-col md:flex-row"
+              >
+                {/* Left: Card Visual */}
+                <div className="w-full md:w-[380px] relative h-48 md:h-auto shrink-0 border-r border-white/5">
+                  <img 
+                    src={viewingPower.image} 
+                    alt={viewingPower.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zello-black via-transparent to-transparent"></div>
+                  <div className="absolute top-6 left-6">
+                     <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-zello-orange/20 backdrop-blur-md border border-zello-orange/30 flex items-center justify-center text-zello-orange shadow-[0_0_20px_rgba(240,90,40,0.3)]">
+                        {React.createElement((LucideIcons as any)[viewingPower.icon] || LucideIcons.Zap, { size: 24 })}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-zello-orange uppercase tracking-[0.3em] leading-none">Habilidade</span>
+                        <span className="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">#{viewingPower.id.padStart(2, '0')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Detailed Info */}
+                <div className="flex-1 flex flex-col min-w-0">
+                  <div className="flex-1 p-6 md:p-10 space-y-6 overflow-y-auto custom-scrollbar">
+                    <div className="space-y-3">
+                      <div className="px-3 py-1 bg-zello-orange/10 border border-zello-orange/20 rounded-full inline-block">
+                        <span className="text-[9px] font-black text-zello-orange uppercase tracking-widest">{viewingPower.category}</span>
+                      </div>
+                      <h2 className="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tight leading-none">{viewingPower.title}</h2>
+                      <p className="text-slate-300 text-sm md:text-base leading-relaxed font-semibold">
+                        {viewingPower.detailedDescription || viewingPower.fullDescription}
+                      </p>
+                    </div>
+
+                    {viewingPower.detailedExamples && viewingPower.detailedExamples.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">Exemplos de Utilização</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {viewingPower.detailedExamples.map((example, idx) => (
+                            <div key={`power-example-${viewingPower.id}-${idx}`} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 group hover:border-zello-orange/30 transition-all flex flex-col">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-zello-orange group-hover:shadow-[0_0_10px_rgba(240,90,40,1)] transition-all"></div>
+                                <h5 className="text-xs font-black text-white uppercase italic tracking-tight">{example.title}</h5>
+                              </div>
+                              <p className="text-slate-400 text-[11px] leading-relaxed flex-1">{example.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6 md:p-8 pt-3 flex justify-end shrink-0 border-t border-white/5">
+                    <button
+                      onClick={() => setViewingPower(null)}
+                      className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                      <LucideIcons.ArrowLeft size={14} />
+                      Voltar ao Deck
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isPresentingDeck && selectedMission && (
+            <motion.div
+              key="presentation-deck-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[150] flex flex-col items-center p-6 bg-zello-black/95 backdrop-blur-2xl overflow-y-auto custom-scrollbar"
+            >
+              <div className="absolute top-8 right-8">
+                <button 
+                  onClick={() => setIsPresentingDeck(false)}
+                  className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white transition-all"
+                >
+                  <X size={32} />
+                </button>
+              </div>
+
+              <div className="w-full max-w-[1600px] space-y-12 pb-24 px-4">
+                <div className="text-center space-y-4">
+                  <div className="px-4 py-2 bg-zello-orange/10 border border-zello-orange/20 rounded-full inline-block">
+                    <span className="text-xs font-black text-zello-orange uppercase tracking-[0.3em]">{selectedMission.title}</span>
+                  </div>
+                  <h2 className="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">Deck de Apresentação</h2>
+                  <p className="text-slate-400 text-xl font-medium max-w-3xl mx-auto">Cards selecionados para a solução estratégica da missão.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-8">
+                  {(missionCards[selectedMission.id] || [])
+                    .map(id => AI_POWERS.find(p => p.id === id))
+                    .filter((p): p is AIPower => !!p)
+                    .map((power, idx, arr) => {
+                      return (
+                        <motion.div
+                          key={`present-deck-${selectedMission.id}-${power.id}-${idx}-${arr.length}`}
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="relative group cursor-pointer"
+                        >
+                          <SuperPowerCard 
+                            power={power} 
+                            isLocked={false} 
+                            onClick={() => setViewingPower(power)}
+                          />
+                          <div className="absolute bottom-4 right-4 w-10 h-10 bg-zello-orange rounded-xl flex items-center justify-center text-white font-black text-lg shadow-[0_0_20px_rgba(240,90,40,0.5)] z-40 border-2 border-white/20">
+                            {idx + 1}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                </div>
+
+                <div className="p-10 bg-white/5 border border-white/10 rounded-[40px] w-full">
+                  <h4 className="text-xs font-black text-zello-orange uppercase tracking-widest mb-4">Estratégia do Time:</h4>
+                  <p className="text-2xl md:text-4xl font-bold italic text-white leading-relaxed">
+                    "{userExplanations[selectedMission.id] || "Nenhuma descrição fornecida."}"
+                  </p>
+                </div>
+
+                <div className="flex justify-center pt-8">
+                  <div className="flex items-center gap-8 p-6 bg-white/5 rounded-full border border-white/10">
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Votos</span>
+                      <div className="flex items-center gap-2">
+                        <LucideIcons.ThumbsUp className="text-zello-orange" size={24} />
+                        <span className="text-3xl font-black text-white tabular-nums">0</span>
+                      </div>
+                    </div>
+                    <div className="w-px h-12 bg-white/10"></div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</span>
+                      <span className="text-xl font-bold text-zello-orange uppercase tracking-tight">Em Avaliação</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-center pt-12 pb-8">
+                  <button
+                    onClick={() => setIsPresentingDeck(false)}
+                    className="px-12 py-5 bg-zello-orange text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-[0_0_30px_rgba(240,90,40,0.4)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-3"
+                  >
+                    <LucideIcons.ArrowLeft size={20} />
+                    Voltar para a Missão
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isAdvisorModalOpen && selectedMission && (
+            <motion.div
+              key="advisor-response-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zello-black/95 backdrop-blur-xl"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="w-full max-w-[1200px] max-h-[85vh] bg-zello-black border-2 border-zello-orange rounded-[40px] shadow-[0_0_100px_rgba(240,90,40,0.3)] relative overflow-hidden flex flex-col"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                  <LucideIcons.Quote size={120} className="text-zello-orange" />
+                </div>
+
+                <div className="p-6 md:p-8 pb-3 relative z-10 shrink-0">
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-full border-4 border-zello-orange overflow-hidden bg-white/10 shadow-[0_0_30px_rgba(240,90,40,0.5)]">
+                      <img src="/Mestre Nomura.png" alt="Mestre Nomura" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Recado do Mestre Nomura</div>
+                      <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight leading-none">{selectedMission.subtitle}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-6 relative z-10 custom-scrollbar">
+                  <div className="text-slate-200 text-sm md:text-base italic leading-relaxed whitespace-pre-line font-medium border-l-4 border-zello-orange pl-6 md:pl-10 py-1.5">
+                    {advisorResponses[selectedMission.id]}
+                  </div>
+                </div>
+
+                <div className="p-6 md:p-8 pt-3 flex justify-center shrink-0 border-t border-white/5 relative z-10">
+                  <button
+                    onClick={() => setIsAdvisorModalOpen(false)}
+                    className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    <LucideIcons.ArrowLeft size={16} />
+                    Voltar para a Missão
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <footer className="h-16 border-t border-white/5 px-6 md:px-12 flex items-center justify-between text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-zello-black">
@@ -3163,6 +2127,7 @@ export default function App() {
       <AnimatePresence>
         {customAlert && (
           <motion.div
+            key="custom-alert-overlay-root"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -3240,6 +2205,7 @@ export default function App() {
       <AnimatePresence>
         {activeVideo && (
           <motion.div
+            key="active-video-overlay-root"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

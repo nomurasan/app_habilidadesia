@@ -11,10 +11,24 @@
   }
 }
 
-/* Retire as barras de rolagem globalmente */
+
+@layer utilities {
+  /* Safari backdrop-filter support */
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+}
+
+/* Retire as barras de rolagem globalmente e otimiza rolagem de toque no iOS */
 html, body {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 ::-webkit-scrollbar {
@@ -26,6 +40,7 @@ html, body {
 .custom-scrollbar {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

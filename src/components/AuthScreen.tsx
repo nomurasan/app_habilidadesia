@@ -9,6 +9,9 @@ import { auth } from '../lib/firebase';
 import { Zap, Sparkles } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
+  const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+  const isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -95,6 +98,18 @@ export const AuthScreen: React.FC = () => {
           >
             Modo Visitante (Sem Salvar Nuvem)
           </button>
+
+          {isSafari && isIframe && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs text-left space-y-2 mt-4">
+              <p className="font-black uppercase tracking-wider text-[10px] text-amber-400">⚠️ Usuário de Safari / iOS:</p>
+              <p className="leading-relaxed">
+                Você está visualizando o app dentro do iFrame do Google AI Studio. Devido às restrições de cookies do Safari (ITP), o login com o Google ou carregamento de dados pode não persistir aqui dentro.
+              </p>
+              <p className="leading-relaxed font-bold">
+                👉 Clique no botão de "Nova Aba" (canto superior direito da tela de preview) para abrir a URL direta do aplicativo para uma experiência perfeita!
+              </p>
+            </div>
+          )}
         </div>
         
         <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">

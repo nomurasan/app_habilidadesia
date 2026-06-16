@@ -1,0 +1,51 @@
+# name: CI/CD Pipeline
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  lint-and-build:
+    name: Lint, Audit & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Code Quality (Linters)
+        run: npm run lint
+
+      - name: Security Audit (Block High & Critical)
+        run: |
+          # Fails the pipeline on high or critical vulnerabilities. 
+          # Documented exceptions can be added temporarily via 'npm audit --audit-level=high || true' ONLY under exceptional, audited circumstances.
+          npm audit --audit-level=high
+
+      - name: Run Unit Tests
+        run: npm run test:unit --if-present
+
+      - name: Run Backend Integration Tests
+        run: npm run test:integration --if-present
+
+      - name: Validate Firestore Rules
+        run: npm run test:rules --if-present
+
+      - name: Run Playwright E2E Tests
+        run: npm run test:e2e --if-present
+
+      - name: Compile and Build for Production
+        run: npm run build
+

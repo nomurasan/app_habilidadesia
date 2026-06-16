@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default Deny
+    // Default Deny Everything
     match /{document=**} {
       allow read, write: if false;
     }
@@ -16,11 +16,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128;
-    }
-
-    function isValidCompany(data) {
-      return data.name is string && data.name.size() > 0;
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function incoming() {
@@ -31,58 +27,71 @@ service cloud.firestore {
       return resource.data;
     }
 
+    // Fetch the user's document database record securely
+    function getUserRecord(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function hasUserRecord(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
     function isGlobalAdmin() {
-      return isSignedIn() && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
+      return isSignedIn() &&
+             hasUserRecord(request.auth.uid) &&
+             getUserRecord(request.auth.uid).get('isAdmin', false) == true;
     }
 
-    // User Profile Validation
-    function isValidUser(data) {
-      return data.userId == request.auth.uid &&
-             data.xp is number && data.xp >= 0 &&
-             data.unlockedPowers is list &&
-             data.currentMissionIndex is number &&
-             data.currentMissionIndex >= 0 &&
-             (!data.keys().hasAny(['missionProgress']) || data.missionProgress is map) &&
-             (data.keys().hasAll(['userId', 'xp', 'unlockedPowers', 'currentMissionIndex']) && 
-              data.keys().size() >= 4 && data.keys().size() <= 15);
-    }
-
-    // Company Validation
-    function isCompanyMember(companyId) {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '') == companyId;
-    }
-
+    // User Profile Rules
     match /users/{userId} {
-      allow get: if isSignedIn(); 
-      allow list: if isSignedIn() && (
-        isGlobalAdmin() ||
-        !('companyId' in resource.data) || 
-        resource.data.companyId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '')
-      ); 
+      // Users can only read their own profile, unless they are a global admin
+      allow get: if isOwner(userId) || isGlobalAdmin();
       
-      allow create: if isOwner(userId) && isValidId(userId);
+      // Allow listing users matching company boundaries (Query Enforcer)
+      allow list: if isSignedIn() && (
+        isGlobalAdmin() || 
+        (resource.data.companyId == getUserRecord(request.auth.uid).get('companyId', ''))
+      );
 
-      allow update: if isOwner(userId) || isGlobalAdmin();
+      // Creation: Only the user can create their own profile. SettingisAdmin must be forbidden unless done by a global admin
+      allow create: if isOwner(userId) && isValidId(userId) && (
+        !incoming().get('isAdmin', false) || isGlobalAdmin()
+      );
 
-      allow delete: if isSignedIn();
+      // Update: User can update their own data, but cannot change administrative or structural fields like isAdmin, or companyId.
+      allow update: if isGlobalAdmin() || (
+        isOwner(userId) && 
+        incoming().get('isAdmin', false) == existing().get('isAdmin', false) &&
+        incoming().get('companyId', '') == existing().get('companyId', '')
+      );
+
+      // Deletion: Strictly administrators only
+      allow delete: if isGlobalAdmin();
     }
 
-    function isAdminOfCompany(cid) {
-      return isGlobalAdmin() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('companyId', '') == cid;
-    }
-
+    // Companies Rules
     match /companies/{companyId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(companyId) && isValidCompany(incoming());
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      // Get: Members of the company or admins can get the document
+      allow get: if isSignedIn() && isValidId(companyId) && (
+        isGlobalAdmin() ||
+        (hasUserRecord(request.auth.uid) && getUserRecord(request.auth.uid).get('companyId', '') == companyId)
+      );
 
+      // List: Only administrators are permitted to list all companies
+      allow list: if isSignedIn() && isGlobalAdmin();
+
+      // Mutation: Administrators only can create/update/delete companies
+      allow create: if isGlobalAdmin() && isValidId(companyId) && incoming().name is string;
+      allow update: if isGlobalAdmin() && isValidId(companyId);
+      allow delete: if isGlobalAdmin() && isValidId(companyId);
+
+      // Company Whitelists Subcollection
       match /whitelist/{emailId} {
-        allow read: if isSignedIn();
-        allow write: if isGlobalAdmin();
+        allow read: if isSignedIn() && isValidId(emailId) && (
+          isGlobalAdmin() ||
+          (hasUserRecord(request.auth.uid) && getUserRecord(request.auth.uid).get('companyId', '') == companyId)
+        );
+        allow write: if isGlobalAdmin() && isValidId(emailId);
       }
     }
   }

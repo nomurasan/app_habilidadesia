@@ -44,6 +44,8 @@ import {
 } from 'recharts';
 import { AIPower, AI_POWERS, CATEGORIES } from '../data/powers';
 import { Mission, MISSIONS } from '../data/missions';
+import { auth } from '../lib/firebase';
+import { TeamStats, TeamMaturityMetric } from '../types';
 
 interface DashboardSectionProps {
   score: number;
@@ -51,13 +53,7 @@ interface DashboardSectionProps {
   unlockedPowers: string[];
   completedMissions: Record<string, boolean>;
   missionCards: Record<string, string[]>;
-  teamStats: {
-    totalXp: number;
-    teamMaturity: any[];
-    teamSkillDist: any[];
-    teamEvolution: any[];
-    topSkills: any[];
-  } | null;
+  teamStats: TeamStats | null;
   userProfile?: {
     email: string;
     skillsSurvey?: Record<string, { current: number; target: number }>;
@@ -129,13 +125,13 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   const [isLoadingRelatorio, setIsLoadingRelatorio] = React.useState<boolean>(false);
   const [errRelatorio, setErrRelatorio] = React.useState<string | null>(null);
 
-  const formatBoldText = (text: string) => {
+  const formatBoldText = (text: string, lineIndex: number | string = '') => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={`bold-${index}`} className="text-white font-extrabold">{part.slice(2, -2)}</strong>;
+        return <strong key={`bold-${lineIndex}-${index}`} className="text-white font-extrabold">{part.slice(2, -2)}</strong>;
       }
-      return <span key={`text-${index}`}>{part}</span>;
+      return <span key={`text-${lineIndex}-${index}`}>{part}</span>;
     });
   };
 
@@ -143,23 +139,23 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
     return text.split('\n').map((line, i) => {
       const trimmed = line.trim();
       if (trimmed.startsWith('## ')) {
-        return <h4 key={i} className="text-lg font-black text-zello-orange uppercase italic mt-6 mb-3 border-b border-zello-orange/10 pb-1">{trimmed.replace('## ', '')}</h4>;
+        return <h4 key={`h4-${i}`} className="text-lg font-black text-zello-orange uppercase italic mt-6 mb-3 border-b border-zello-orange/10 pb-1">{trimmed.replace('## ', '')}</h4>;
       }
       if (trimmed.startsWith('# ')) {
-        return <h3 key={i} className="text-xl font-black text-white uppercase italic mt-8 mb-4">{trimmed.replace('# ', '')}</h3>;
+        return <h3 key={`h3-${i}`} className="text-xl font-black text-white uppercase italic mt-8 mb-4">{trimmed.replace('# ', '')}</h3>;
       }
       if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
         const content = trimmed.substring(2);
         return (
-          <li key={i} className="ml-4 list-disc text-slate-300 font-medium leading-relaxed my-1">
-            {formatBoldText(content)}
+          <li key={`li-${i}`} className="ml-4 list-disc text-slate-300 font-medium leading-relaxed my-1">
+            {formatBoldText(content, `li-${i}`)}
           </li>
         );
       }
       if (trimmed === '') {
-        return <div key={i} className="h-2"></div>;
+        return <div key={`empty-${i}`} className="h-2"></div>;
       }
-      return <p key={i} className="text-slate-300 font-medium leading-relaxed my-2">{formatBoldText(trimmed)}</p>;
+      return <p key={`p-${i}`} className="text-slate-300 font-medium leading-relaxed my-2">{formatBoldText(trimmed, `p-${i}`)}</p>;
     });
   };
 
@@ -167,10 +163,12 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
     setIsLoadingRelatorio(true);
     setErrRelatorio(null);
     try {
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : '';
       const response = await fetch('/api/gerar-relatorio', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': idToken ? `Bearer ${idToken}` : '',
         },
         body: JSON.stringify({
           email: userProfile?.email || '',
@@ -618,7 +616,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                {[
-                 { label: 'Maturidade Média', val: teamStats ? `${Math.round(teamStats.teamMaturity.reduce((s: any, m: any) => s + m.A, 0) / 6)}%` : '78%', icon: Target, color: 'text-blue-500' },
+                 { label: 'Maturidade Média', val: teamStats ? `${Math.round(teamStats.teamMaturity.reduce((s: number, m: TeamMaturityMetric) => s + m.A, 0) / 6)}%` : '78%', icon: Target, color: 'text-blue-500' },
                  { label: 'XP Total Turma', val: teamStats ? teamStats.totalXp.toLocaleString() : '124k', icon: Zap, color: 'text-zello-orange' },
                  { label: 'Skills Coletivas', val: teamStats ? teamStats.topSkills.length.toString() : '4', icon: Trophy, color: 'text-yellow-500' },
                  { label: 'Participantes', val: 'Ativos', icon: BarChart2, color: 'text-green-500' },
