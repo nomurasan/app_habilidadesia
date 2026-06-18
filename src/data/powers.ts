@@ -145,7 +145,7 @@ export const AI_POWERS: AIPower[] = [
     // Legacy maps
     shortDescription: 'Elaborar comunicados internos ou externos estruturados.',
     fullDescription: 'Elaborar comunicados internos ou externos de forma estruturada, clara e engajadora.',
-    cases: ['Divulgação da trilha Jornada Jedi', 'Boas-vindas coletivas do onboarding', 'Práticas saudáveis no expediente diário']
+    cases: ['Divulgação da trilha AI SKILLS ARENA', 'Boas-vindas coletivas do onboarding', 'Práticas saudáveis no expediente diário']
   },
   {
     id: '6',

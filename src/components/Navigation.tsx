@@ -35,7 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <Zap className="text-white fill-white" size={24} />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black italic tracking-tighter leading-none text-white font-sans">JORNADA JEDI</span>
+            <span className="text-xl font-black italic tracking-tighter leading-none text-white font-sans">AI SKILLS ARENA</span>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] font-bold text-zello-orange uppercase tracking-widest leading-none">A FORÇA ESTÁ COM VOCÊ</span>
               {currentCompany && (

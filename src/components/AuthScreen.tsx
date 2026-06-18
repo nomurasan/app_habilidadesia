@@ -56,7 +56,7 @@ export const AuthScreen: React.FC = () => {
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zello-orange/10 border border-zello-orange/20 text-zello-orange text-xs font-black uppercase tracking-widest">
             <Sparkles size={14} className="fill-zello-orange" />
-            Inicie sua Jornada
+            Inicie na Arena
           </div>
           
           <div className="relative inline-flex items-center justify-center w-24 h-24 bg-zello-orange rounded-3xl shadow-[0_0_50px_rgba(240,90,40,0.5)] mb-8">
@@ -65,7 +65,7 @@ export const AuthScreen: React.FC = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic text-white leading-none">
-            JORNADA <br/> JEDI
+            AI <br/> SKILLS ARENA
           </h1>
           <p className="text-slate-400 font-medium">
             Sincronize seu perfil para salvar seu progresso, <br className="hidden md:block"/> desbloquear habilidades e subir no ranking.

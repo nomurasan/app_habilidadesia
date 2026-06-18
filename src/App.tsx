@@ -2065,7 +2065,7 @@ export default function App() {
       </main>
 
       <footer className="h-16 border-t border-white/5 px-6 md:px-12 flex items-center justify-between text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-zello-black">
-        <div className="hidden md:block">© 2024 Jornada Jedi • Bioética em IA</div>
+        <div className="hidden md:block">© 2026 AI SKILLS ARENA • Bioética em IA</div>
         <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
