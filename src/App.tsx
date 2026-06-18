@@ -16,9 +16,10 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { AI_POWERS, CATEGORIES, AIPower, Challenge } from './data/powers';
+import { AI_POWERS, CATEGORIES, AIPower } from './data/powers';
+import { Challenge, Mission } from './types';
 import { ALL_CHALLENGES } from './data/challenges';
-import { MISSIONS, Mission } from './data/missions';
+import { MISSIONS } from './data/missions';
 import { SuperPowerCard } from './components/SuperPowerCard';
 import { auth, db, handleFirestoreError, OperationType } from './lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -102,7 +103,8 @@ export default function App() {
   const [selectedLevel, setSelectedLevel] = useState<'PADAWAN' | 'JEDI' | 'YODA' | null>(null);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [selectedPower, setSelectedPower] = useState<string | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
+  const [isAnsweredCorrectly, setIsAnsweredCorrectly] = useState(false);
   const [viewingPower, setViewingPower] = useState<AIPower | null>(null);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [missionCards, setMissionCards] = useState<Record<string, string[]>>({});
@@ -727,12 +729,12 @@ export default function App() {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && !isAnswered) {
-      handleAnswer(''); // Auto-submit on timeout
+      confirmQuizAnswers(); // Auto-submit on timeout
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, isAnswered]);
+  }, [isActive, timeLeft, isAnswered, selectedSkillIds]);
 
   const startLevel = (level: 'PADAWAN' | 'JEDI' | 'YODA') => {
     // Filter and shuffle challenges for the selected level
@@ -746,20 +748,40 @@ export default function App() {
     setTimeLeft(60);
     setIsActive(true);
     setIsAnswered(false);
-    setSelectedPower(null);
+    setIsAnsweredCorrectly(false);
+    setSelectedSkillIds([]);
     setAiFeedback(null);
     setGameState('game');
   };
 
-  const handleAnswer = async (powerId: string) => {
-    if (isAnswered || !user) return;
-    
-    const selectedPowerData = powerId ? AI_POWERS.find(p => p.id === powerId) : null;
-    const correctPowerData = AI_POWERS.find(p => p.id === currentChallenge.correctPowerId);
+  const toggleSkillId = (skillId: number) => {
+    if (isAnswered) return;
+    setSelectedSkillIds(prev =>
+      prev.includes(skillId) ? prev.filter(id => id !== skillId) : [...prev, skillId]
+    );
+  };
 
-    setSelectedPower(powerId);
+  const confirmQuizAnswers = async () => {
+    if (isAnswered || !user || !currentChallenge) return;
+
     setIsAnswered(true);
     setIsActive(false);
+
+    // Evaluate exact match correctness
+    const allCorrectSelected = currentChallenge.correctSkillIds.every(id => selectedSkillIds.includes(id));
+    const noIncorrectSelected = !currentChallenge.incorrectSkillIds.some(id => selectedSkillIds.includes(id));
+    const isCorrect = allCorrectSelected && noIncorrectSelected;
+    setIsAnsweredCorrectly(isCorrect);
+
+    // Filter correct skills names for feedback
+    const correctPowersList = AI_POWERS.filter(p => currentChallenge.correctSkillIds.includes(Number(p.id)));
+    const correctAnswerTitle = correctPowersList.map(p => p.title).join(', ');
+
+    // Filter selected skills names for feedback
+    const selectedPowersList = AI_POWERS.filter(p => selectedSkillIds.includes(Number(p.id)));
+    const selectedAnswerTitle = selectedPowersList.length > 0 
+      ? selectedPowersList.map(p => p.title).join(', ') 
+      : 'Nenhuma/Tempo Esgotado';
 
     // Call AI Feedback API
     setIsAiFeedbackLoading(true);
@@ -773,13 +795,13 @@ export default function App() {
         },
         body: JSON.stringify({
           scenario: currentChallenge.scenario,
-          correctAnswer: correctPowerData?.title || 'Desconhecida',
-          selectedAnswer: selectedPowerData?.title || 'Nenhuma/Tempo Esgotado',
+          correctAnswer: correctAnswerTitle || 'Desconhecida',
+          selectedAnswer: selectedAnswerTitle,
           level: selectedLevel
         }),
       });
       const data = await response.json();
-      setAiFeedback(data.feedback);
+      setAiFeedback(data.feedback || data.data?.feedback);
     } catch (error) {
       console.error("Error fetching AI feedback:", error);
       setAiFeedback(currentChallenge.explanation); // Fallback to static explanation
@@ -787,29 +809,38 @@ export default function App() {
       setIsAiFeedbackLoading(false);
     }
     
-    if (powerId === currentChallenge.correctPowerId) {
+    // Sync points and unlocks
+    let newScore = score;
+    let newUnlockedList = [...unlockedPowers];
+
+    if (isCorrect) {
       // Points calculation: Base 1000 + Time Bonus (up to 500)
       const timeBonus = Math.floor((timeLeft / 60) * 500);
       const pointsEarned = 1000 + timeBonus;
-      const newScore = score + pointsEarned;
-      const newUnlocked = unlockedPowers.includes(powerId) 
-        ? unlockedPowers 
-        : [...unlockedPowers, powerId];
+      newScore = score + pointsEarned;
+
+      // Unlock all correct skills
+      currentChallenge.correctSkillIds.forEach(id => {
+        const idStr = String(id);
+        if (!newUnlockedList.includes(idStr)) {
+          newUnlockedList.push(idStr);
+        }
+      });
 
       setScore(newScore);
-      setUnlockedPowers(newUnlocked);
+      setUnlockedPowers(newUnlockedList);
+    }
 
-      // Sync to Firestore
-      try {
-        const userDocRef = doc(db, 'users', user.uid);
-        await updateDoc(userDocRef, {
-          xp: newScore,
-          unlockedPowers: newUnlocked,
-          lastActive: serverTimestamp()
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
-      }
+    // Explicitly sync to firestore regardless of correctness (e.g. tracking XP state, or updating unlocked listed)
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        xp: newScore,
+        unlockedPowers: newUnlockedList,
+        lastActive: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
     }
   };
 
@@ -820,12 +851,11 @@ export default function App() {
       const nextIndex = currentChallengeIndex + 1;
       setCurrentChallengeIndex(nextIndex);
       setIsAnswered(false);
-      setSelectedPower(null);
+      setIsAnsweredCorrectly(false);
+      setSelectedSkillIds([]);
       setAiFeedback(null);
       setTimeLeft(60);
       setIsActive(true);
-
-      // We don't necessarily sync mission index per level if it's a quiz session
     } else {
       setGameState('results');
     }
@@ -837,7 +867,8 @@ export default function App() {
     setScore(0);
     setCurrentChallengeIndex(0);
     setIsAnswered(false);
-    setSelectedPower(null);
+    setIsAnsweredCorrectly(false);
+    setSelectedSkillIds([]);
     setAiFeedback(null);
     setGameState('game');
 
@@ -1619,12 +1650,14 @@ export default function App() {
               currentChallenge={currentChallenge}
               selectedLevel={selectedLevel}
               score={score}
-              selectedPower={selectedPower}
+              selectedSkillIds={selectedSkillIds}
               isAnswered={isAnswered}
+              isAnsweredCorrectly={isAnsweredCorrectly}
               timeLeft={timeLeft}
               aiFeedback={aiFeedback}
               isAiFeedbackLoading={isAiFeedbackLoading}
-              handleSelection={handleAnswer}
+              toggleSkillId={toggleSkillId}
+              confirmAnswers={confirmQuizAnswers}
               nextChallenge={nextChallenge}
               setActiveVideo={setActiveVideo}
             />
@@ -1656,6 +1689,7 @@ export default function App() {
               setIsSaving={setIsSaving}
               setIsAdvisorModalOpen={setIsAdvisorModalOpen}
               currentCompany={currentCompany}
+              setViewingPower={setViewingPower}
             />
           )}
 
@@ -1771,70 +1805,117 @@ export default function App() {
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="w-full max-w-[1300px] max-h-[92vh] bg-zello-black border-2 border-zello-orange rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(240,90,40,0.3)] flex flex-col md:flex-row"
+                className="w-full max-w-[800px] max-h-[88vh] bg-zello-black border-2 border-zello-orange rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(240,90,40,0.3)] flex flex-col"
               >
-                {/* Left: Card Visual */}
-                <div className="w-full md:w-[380px] relative h-48 md:h-auto shrink-0 border-r border-white/5">
-                  <img 
-                    src={viewingPower.image} 
-                    alt={viewingPower.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zello-black via-transparent to-transparent"></div>
-                  <div className="absolute top-6 left-6">
-                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-zello-orange/20 backdrop-blur-md border border-zello-orange/30 flex items-center justify-center text-zello-orange shadow-[0_0_20px_rgba(240,90,40,0.3)]">
-                        {React.createElement((LucideIcons as any)[viewingPower.icon] || LucideIcons.Zap, { size: 24 })}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-zello-orange uppercase tracking-[0.3em] leading-none">Habilidade</span>
-                        <span className="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">#{viewingPower.id.padStart(2, '0')}</span>
+                {/* Scrollable Container with sequential details 1 to 8 */}
+                <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar space-y-6">
+                  {/* 1. Categoria */}
+                  {viewingPower.category && (
+                    <div id="pwr-detail-category" className="flex justify-start">
+                      <div className="px-3 py-1 bg-zello-orange/10 border border-zello-orange/20 rounded-full">
+                        <span className="text-[10px] font-black text-zello-orange uppercase tracking-widest">
+                          {viewingPower.category}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Right: Detailed Info */}
-                <div className="flex-1 flex flex-col min-w-0">
-                  <div className="flex-1 p-6 md:p-10 space-y-6 overflow-y-auto custom-scrollbar">
-                    <div className="space-y-3">
-                      <div className="px-3 py-1 bg-zello-orange/10 border border-zello-orange/20 rounded-full inline-block">
-                        <span className="text-[9px] font-black text-zello-orange uppercase tracking-widest">{viewingPower.category}</span>
+                  {/* 2. Nome da Habilidade */}
+                  {viewingPower.title && (
+                    <h2 id="pwr-detail-title" className="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tight leading-none">
+                      {viewingPower.title}
+                    </h2>
+                  )}
+
+                  {/* 3. Número da Habilidade */}
+                  {viewingPower.id && (
+                    <div id="pwr-detail-number" className="flex items-center gap-2 text-slate-400">
+                      <span className="text-[9px] font-black text-zello-orange uppercase tracking-[0.2em] leading-none">
+                        Habilidade
+                      </span>
+                      <span className="text-2xl font-black text-white italic tracking-tighter leading-none">
+                        #{viewingPower.id.padStart(2, '0')}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 4. Imagem */}
+                  {viewingPower.image && (
+                    <div id="pwr-detail-image" className="rounded-2xl overflow-hidden border border-white/10 h-64 md:h-80 w-full relative">
+                      <img 
+                        src={viewingPower.image} 
+                        alt={viewingPower.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zello-black via-transparent to-transparent"></div>
+                    </div>
+                  )}
+
+                  {/* 5. Ícone */}
+                  {viewingPower.icon && (
+                    <div id="pwr-detail-icon" className="flex justify-start">
+                      <div className="w-14 h-14 rounded-2xl bg-zello-orange/20 border border-zello-orange/30 flex items-center justify-center text-zello-orange shadow-[0_0_20px_rgba(240,90,40,0.3)]">
+                        {React.createElement((LucideIcons as any)[viewingPower.icon] || LucideIcons.Zap, { size: 28 })}
                       </div>
-                      <h2 className="text-3xl md:text-5xl font-black text-white italic uppercase tracking-tight leading-none">{viewingPower.title}</h2>
+                    </div>
+                  )}
+
+                  {/* 6. Contexto de Aplicação */}
+                  {viewingPower.applicationContext && (
+                    <div id="pwr-detail-context" className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">
+                        Contexto de Aplicação
+                      </h4>
                       <p className="text-slate-300 text-sm md:text-base leading-relaxed font-semibold">
-                        {viewingPower.detailedDescription || viewingPower.fullDescription}
+                        {viewingPower.applicationContext}
                       </p>
                     </div>
+                  )}
 
-                    {viewingPower.detailedExamples && viewingPower.detailedExamples.length > 0 && (
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">Exemplos de Utilização</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {viewingPower.detailedExamples.map((example, idx) => (
-                            <div key={`power-example-${viewingPower.id}-${idx}`} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 group hover:border-zello-orange/30 transition-all flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-zello-orange group-hover:shadow-[0_0_10px_rgba(240,90,40,1)] transition-all"></div>
-                                <h5 className="text-xs font-black text-white uppercase italic tracking-tight">{example.title}</h5>
-                              </div>
-                              <p className="text-slate-400 text-[11px] leading-relaxed flex-1">{example.description}</p>
-                            </div>
-                          ))}
-                        </div>
+                  {/* 7. Exemplo Prático */}
+                  {viewingPower.practicalExample && (
+                    <div id="pwr-detail-example" className="space-y-2">
+                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">
+                        Exemplo Prático
+                      </h4>
+                      <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+                        <p className="text-slate-300 text-sm leading-relaxed">
+                          {viewingPower.practicalExample}
+                        </p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  <div className="p-6 md:p-8 pt-3 flex justify-end shrink-0 border-t border-white/5">
-                    <button
-                      onClick={() => setViewingPower(null)}
-                      className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
-                    >
-                      <LucideIcons.ArrowLeft size={14} />
-                      Voltar ao Deck
-                    </button>
-                  </div>
+                  {/* 8. Benefícios Esperados */}
+                  {viewingPower.expectedBenefits && 
+                   Array.isArray(viewingPower.expectedBenefits) && 
+                   viewingPower.expectedBenefits.filter(Boolean).length > 0 && (
+                    <div id="pwr-detail-benefits" className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zello-orange">
+                        Benefícios Esperados
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {viewingPower.expectedBenefits.filter(Boolean).map((benefit, idx) => (
+                          <div key={`pwr-benefit-${idx}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-zello-orange/20 transition-all font-semibold">
+                            <div className="w-1.5 h-1.5 rounded-full bg-zello-orange shrink-0 shadow-[0_0_8px_rgba(240,90,40,1)]"></div>
+                            <span className="text-xs text-slate-300">{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 9. Botão "Voltar ao Deck" */}
+                <div id="pwr-detail-footer" className="p-6 md:p-8 pt-3 flex justify-end shrink-0 border-t border-white/5">
+                  <button
+                    onClick={() => setViewingPower(null)}
+                    className="px-8 py-3.5 bg-zello-orange text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    <LucideIcons.ArrowLeft size={14} />
+                    Voltar ao Deck
+                  </button>
                 </div>
               </motion.div>
             </motion.div>

@@ -43,9 +43,9 @@ import {
   Area
 } from 'recharts';
 import { AIPower, AI_POWERS, CATEGORIES } from '../data/powers';
-import { Mission, MISSIONS } from '../data/missions';
+import { MISSIONS } from '../data/missions';
 import { auth } from '../lib/firebase';
-import { TeamStats, TeamMaturityMetric } from '../types';
+import { Mission, TeamStats, TeamMaturityMetric } from '../types';
 
 interface DashboardSectionProps {
   score: number;
@@ -72,13 +72,31 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   onWatchVideo
 }) => {
   // Mock data for charts - in a real app these would come from aggregate Firestore queries
+  // Calcular dados de maturidade de forma dinâmica de acordo com os cards destravados pelo participante
+  const hasCom = unlockedPowers.includes('1');
+  const hasCtx = unlockedPowers.includes('4');
+  const hasJul = unlockedPowers.includes('9');
+  const hasRef = unlockedPowers.includes('8');
+  const hasSeg = unlockedPowers.includes('12');
+  const hasCrit = unlockedPowers.includes('11');
+  const hasSol = unlockedPowers.includes('10');
+  const hasProd = unlockedPowers.includes('2');
+  const hasCur = unlockedPowers.includes('3');
+
+  const comVal = Math.min(95, (hasCom ? 40 : 15) + (hasCtx ? 35 : 15) + (score > 1000 ? 15 : 5));
+  const julVal = Math.min(95, (hasJul ? 40 : 15) + (hasRef ? 35 : 15) + (Object.keys(completedMissions).length * 4));
+  const segVal = Math.min(95, (hasSeg ? 75 : 25) + (score > 1200 ? 15 : 5));
+  const critVal = Math.min(95, (hasCrit ? 75 : 25) + (Object.keys(completedMissions).length * 5));
+  const solVal = Math.min(95, (hasSol ? 70 : 30) + (unlockedPowers.length * 2));
+  const prodVal = Math.min(95, (hasProd ? 40 : 15) + (hasCur ? 35 : 15) + 15);
+
   const maturityData = [
-    { subject: 'Produtividade', A: Math.min(80, (unlockedPowers.length * 5) + 30), fullMark: 100 },
-    { subject: 'Criatividade', A: Math.min(85, (Object.keys(completedMissions).length * 10) + 20), fullMark: 100 },
-    { subject: 'Automação', A: Math.min(75, (unlockedPowers.filter(p => ['9', '10', '11'].includes(p)).length * 15) + 20), fullMark: 100 },
-    { subject: 'Comunicação', A: Math.min(90, (unlockedPowers.filter(p => ['1', '2', '6', '8'].includes(p)).length * 15) + 30), fullMark: 100 },
-    { subject: 'Estratégia', A: Math.min(70, (score / 200) + 10), fullMark: 100 },
-    { subject: 'Ética/IA', A: 85, fullMark: 100 },
+    { subject: 'Comunicação & Contexto', A: comVal, fullMark: 100 },
+    { subject: 'Julgamento Humano', A: julVal, fullMark: 100 },
+    { subject: 'Segurança & LGPD', A: segVal, fullMark: 100 },
+    { subject: 'Pensamento Crítico', A: critVal, fullMark: 100 },
+    { subject: 'Resolução de Problemas', A: solVal, fullMark: 100 },
+    { subject: 'Produtividade Inteligente', A: prodVal, fullMark: 100 },
   ];
 
   const skillDistribution = Object.keys(CATEGORIES).map(cat => ({
@@ -96,22 +114,22 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
     { name: 'Encontro 4', xp: 7200, maturity: 78 },
   ];
 
-  const topSkillsData = teamStats?.topSkills || [
-    { name: 'ChatGPT', count: 45 },
-    { name: 'Midjourney', count: 32 },
-    { name: 'Gemini', count: 38 },
-    { name: 'Claude', count: 25 },
-    { name: 'Copilot', count: 41 },
+  const topSkillsData = [
+    { name: 'Segurança & LGPD', count: 88 },
+    { name: 'Comunicação & Contexto', count: 82 },
+    { name: 'Produtividade Inteligente', count: 75 },
+    { name: 'Pensamento Crítico', count: 70 },
+    { name: 'Julgamento Humano', count: 65 },
   ];
 
   const xpEvolutionData = [
-    { name: 'Day 1', xp: 400 },
-    { name: 'Day 2', xp: 900 },
-    { name: 'Day 3', xp: 1500 },
-    { name: 'Day 4', xp: 2200 },
-    { name: 'Day 5', xp: 2800 },
-    { name: 'Day 6', xp: 3500 },
-    { name: 'Day 7', xp: score },
+    { name: 'Dia 1', xp: 400 },
+    { name: 'Dia 2', xp: 900 },
+    { name: 'Dia 3', xp: 1500 },
+    { name: 'Dia 4', xp: 2200 },
+    { name: 'Dia 5', xp: 2800 },
+    { name: 'Dia 6', xp: 3500 },
+    { name: 'Dia 7', xp: score },
   ];
 
   const COLORS = ['#F05A28', '#ff7b4d', '#ff9c7a', '#ffa500', '#ff8c00', '#ff4500'];
@@ -491,11 +509,11 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             
             <div className="space-y-4 pt-4 border-t border-white/10">
               <p className="text-slate-300 italic font-medium leading-relaxed">
-                "Grande potencial eu vejo em você. O caminho da automação deve seguir. Menos tempo operando, mais tempo criando, é o que o futuro exige. A força das habilidades de Automação Inteligente você deve fortalecer."
+                "Grande potencial eu vejo em você. O caminho do Pensamento Crítico e da Segurança da Informação deve dominar. Desenvolver soluções sem riscos com forte Julgamento Humano protegerá o seu amanhã."
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black uppercase text-zello-orange border border-zello-orange/30">Focar em Automação</span>
-                <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black uppercase text-zello-orange border border-zello-orange/30">Expandir Multimodal</span>
+                <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black uppercase text-zello-orange border border-zello-orange/30">Pensamento Crítico</span>
+                <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black uppercase text-zello-orange border border-zello-orange/30">Segurança & LGPD</span>
               </div>
             </div>
           </div>
@@ -553,7 +571,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
               </div>
               <div className="space-y-6">
                  {topSkillsData.map((skill, index) => (
-                   <div key={`team-skill-row-v5-${skill.id || skill.name}-${index}-${topSkillsData.length}`} className="space-y-1">
+                   <div key={`team-skill-row-v5-${skill.name}-${index}-${topSkillsData.length}`} className="space-y-1">
                      <div className="flex justify-between items-end">
                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{skill.name}</span>
                        <span className="text-sm font-black text-white">{skill.count}%</span>

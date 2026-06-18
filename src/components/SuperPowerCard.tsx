@@ -7,9 +7,10 @@ interface SuperPowerCardProps {
   power: AIPower;
   isLocked?: boolean;
   onClick?: () => void;
+  onConsult?: () => void;
 }
 
-export const SuperPowerCard: React.FC<SuperPowerCardProps> = ({ power, isLocked = false, onClick }) => {
+export const SuperPowerCard: React.FC<SuperPowerCardProps> = ({ power, isLocked = false, onClick, onConsult }) => {
   const IconComponent = (LucideIcons as any)[power.icon] || LucideIcons.Zap;
 
   return (
@@ -33,44 +34,50 @@ export const SuperPowerCard: React.FC<SuperPowerCardProps> = ({ power, isLocked 
 
         {/* Content Container */}
         <div className="relative h-full p-8 flex flex-col justify-between z-10">
-          {/* Top Section: Category & Icon */}
+          {/* Top Section: Category, Icon & Number */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-zello-orange/20 backdrop-blur-md border border-zello-orange/30 flex items-center justify-center text-zello-orange shadow-[0_0_20px_rgba(240,90,40,0.3)] group-hover:bg-zello-orange group-hover:text-white transition-all duration-300">
                 <IconComponent size={24} />
               </div>
-              <div className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{power.category}</span>
+              <div className="flex flex-col gap-1">
+                <div className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-full border border-white/10 w-fit">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{power.category}</span>
+                </div>
+                <div className="flex items-center gap-1.5 pl-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[8px] font-black text-zello-orange uppercase tracking-[0.2em] leading-none">Habilidade</span>
+                  <span className="text-sm font-black text-white italic tracking-tighter leading-none">#{power.id.padStart(2, '0')}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Section: Title & Description */}
-          <div className="space-y-4 max-w-[85%] relative">
-            <div className="space-y-1">
+          {/* Bottom Section: Title, Objective and Details button */}
+          <div className="space-y-4 max-w-full relative">
+            <div className={`space-y-1 ${onConsult ? 'pr-24' : ''}`}>
               <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter group-hover:text-zello-orange transition-colors">
                 {power.title}
               </h3>
               <p className="text-sm text-slate-300 font-medium leading-relaxed">
-                {power.fullDescription}
+                {power.objective}
               </p>
             </div>
 
-            <div className="absolute bottom-0 right-0 flex flex-col items-end opacity-40 group-hover:opacity-100 transition-opacity">
-              <span className="text-[8px] font-black text-zello-orange uppercase tracking-[0.2em] leading-none">Habilidade</span>
-              <span className="text-3xl font-black text-white italic tracking-tighter leading-none mt-1">#{power.id.padStart(2, '0')}</span>
-            </div>
-
-                      <div className="flex flex-wrap gap-x-6 gap-y-2 pt-3 border-t border-white/10">
-              {power.cases.map((useCase, idx) => (
-                <div key={`case-pwr-final-${power.id}-${idx}-${useCase.slice(0, 5)}`} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-zello-orange shadow-[0_0_8px_rgba(240,90,40,1)] shrink-0" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-normal">
-                    {useCase}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {onConsult && (
+              <div className="absolute bottom-0 right-0 z-30">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onConsult();
+                  }}
+                  className="px-3 py-1.5 bg-zello-orange text-white hover:brightness-110 active:scale-95 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_15px_rgba(240,90,40,0.4)]"
+                >
+                  <LucideIcons.Eye size={11} />
+                  Detalhes
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

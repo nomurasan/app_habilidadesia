@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mission } from '../data/missions';
+import { Mission } from '../types';
 import { MissionService } from '../services/MissionService';
 import { AIPower } from '../data/powers';
 import { AppError } from '../utils/errors';

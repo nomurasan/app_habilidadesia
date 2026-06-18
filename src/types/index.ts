@@ -55,15 +55,28 @@ export interface AIUsageAudit {
 }
 
 export interface Mission {
-  id: string;
+  id: number;
   title: string;
-  subtitle: string;
   context: string;
-  items: string[];
   reflection: string;
-  expectedResults: string[];
-  recommendedPowerIds: string[];
-  advisorHint: string;
+  challenge: string;
+  expectedResult: string;
+  maturityDescription: string;
+  recommendedSkillIds: number[];
+  hiddenReferenceSolution: string;
+
+  // Optional fields for perfect UI backward compatibility
+  subtitle?: string;
+  items?: string[];
+  expectedResults?: string[];
+  recommendedPowerIds?: string[];
+  advisorHint?: string;
+}
+
+export interface RecommendedSkill {
+  skillId: number;
+  weight: number;
+  role: 'primary' | 'secondary';
 }
 
 export interface Challenge {
@@ -71,8 +84,9 @@ export interface Challenge {
   level: 'PADAWAN' | 'JEDI' | 'YODA';
   title: string;
   scenario: string;
-  correctPowerId: string;
-  distractors: string[];
+  correctSkillIds: number[];
+  incorrectSkillIds: number[];
+  recommendedSkills?: RecommendedSkill[];
   explanation: string;
 }
 
@@ -80,13 +94,19 @@ export interface AIPower {
   id: string;
   category: string;
   title: string;
-  shortDescription: string;
-  fullDescription: string;
-  detailedDescription?: string;
-  detailedExamples?: { title: string; description: string }[];
-  cases: string[];
+  objective: string;
+  applicationContext: string;
+  practicalExample: string;
+  expectedBenefits: string[];
   icon: string;
   image: string;
+  
+  // Legacy fields preserved for complete backward compatibility
+  shortDescription?: string;
+  fullDescription?: string;
+  detailedDescription?: string;
+  detailedExamples?: { title: string; description: string }[];
+  cases?: string[];
 }
 
 export interface TeamMaturityMetric {

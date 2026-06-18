@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import * as LucideIcons from 'lucide-react';
-import { Mission, Company } from '../types';
+import { Mission, Company, AIPower } from '../types';
 import { MISSIONS } from '../data/missions';
 import { AI_POWERS } from '../data/powers';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -32,6 +32,7 @@ interface MissionsSectionViewProps {
   setIsSaving: (val: boolean) => void;
   setIsAdvisorModalOpen: (val: boolean) => void;
   currentCompany: Company | null;
+  setViewingPower: (power: AIPower | null) => void;
 }
 
 export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
@@ -58,6 +59,7 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
   setIsSaving,
   setIsAdvisorModalOpen,
   currentCompany,
+  setViewingPower,
 }) => {
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -232,7 +234,7 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                 </div>
                 <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
                 <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-                  "As missões táticas vão exigir foco e sabedoria. Conecte as melhores ferramentas de IA da sua coleção para resolver casos práticos e reais!"
+                  "As missões táticas vão exigir foco e sabedoria. Combine as competências profissionais da sua coleção para resolver os desafios estratégicos reais!"
                 </p>
 
                 <div className="pt-2">
@@ -311,10 +313,10 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                   </div>
                   <div>
                     <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em] select-none">
-                      {selectedMission.title}
+                      Domine o Poder da IA
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-white italic leading-tight uppercase font-sans">
-                      {selectedMission.subtitle}
+                      {selectedMission.title}
                     </h2>
                   </div>
                 </div>
@@ -328,8 +330,8 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                     <p className="text-xl md:text-2xl font-medium leading-relaxed text-slate-200 select-text">
                       {selectedMission.context}
                     </p>
-                    {selectedMission.items.length > 0 && (
-                      <ul className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6 select-none">
+                    {selectedMission.items && selectedMission.items.length > 0 && (
+                      <ul className="grid grid-cols-2 md:grid-cols-2 gap-4 mt-6 select-none">
                         {selectedMission.items.map((item, idx) => (
                           <li
                             key={`msn-item-f-${selectedMission.id}-${idx}`}
@@ -351,28 +353,32 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                       "{selectedMission.reflection}"
                     </p>
                   </div>
+
+                  {selectedMission.challenge && (
+                    <div className="pt-8 border-t border-white/5 space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange select-none font-sans">
+                        Desafio Proposto
+                      </h4>
+                      <p className="text-xl md:text-2xl font-medium leading-relaxed text-slate-200 select-text">
+                        {selectedMission.challenge}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 select-none">
                   <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
                     <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange font-sans">Resultado Esperado</h4>
-                    <ul className="space-y-4">
-                      {selectedMission.expectedResults.map((result, idx) => (
-                        <li key={`msn-res-f-${selectedMission.id}-${idx}`} className="flex items-start gap-4">
-                          <div className="w-6 h-6 rounded-lg bg-zello-orange/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <LucideIcons.Star size={12} className="text-zello-orange fill-zello-orange" />
-                          </div>
-                          <span className="text-slate-400 font-medium leading-relaxed text-sm">{result}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-sm text-slate-400 font-semibold leading-relaxed">
+                      {selectedMission.expectedResult || (selectedMission.expectedResults && selectedMission.expectedResults[0])}
+                    </p>
                   </div>
 
                   <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
                     <h4 className="text-xs font-black uppercase tracking-widest text-zello-orange font-sans">Maturidade & Evolução</h4>
                     <div className="space-y-4">
-                      <p className="text-sm text-slate-400 font-medium leading-relaxed">
-                        Esta missão avalia sua capacidade de conectar objetivos de negócio com tecnologias de IA.
+                      <p className="text-sm text-slate-400 font-semibold leading-relaxed">
+                        {selectedMission.maturityDescription || "Esta missão avalia sua capacidade de conectar objetivos corporativos com as competências estruturais de IA."}
                       </p>
                       <div className="space-y-2">
                         <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -427,6 +433,17 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                             <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight text-white select-none">
                               {power.title}
                             </span>
+                            <button
+                              type="button"
+                              className="mt-3 px-2 py-1 bg-zello-orange/20 hover:bg-zello-orange text-white border border-zello-orange/30 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 z-30 cursor-pointer shadow-[0_0_10px_rgba(240,90,40,0.2)]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingPower(power);
+                              }}
+                            >
+                              <LucideIcons.Eye size={9} />
+                              Consultar
+                            </button>
                             <div
                               className="absolute top-1 right-1 p-1 hover:text-white text-slate-500 cursor-pointer z-20"
                               onClick={(e) => {
@@ -476,7 +493,7 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                 </div>
                 <div className="relative group">
                   <textarea
-                    placeholder="Explique como você pretende usar as habilidades selecionadas para resolver esta missão..."
+                    placeholder="Explique detalhadamente como pretende orquestrar as competências selecionadas para resolver esta missão de forma produtiva, ética e segura..."
                     className={`w-full bg-zello-black/40 border border-white/10 rounded-2xl p-6 text-slate-300 text-sm focus:border-zello-orange/50 transition-all min-h-[160px] outline-none ${
                       isRewriting ? 'opacity-50 pointer-events-none' : ''
                     }`}

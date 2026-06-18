@@ -45,12 +45,12 @@ export const DeckSectionView: React.FC<DeckSectionViewProps> = ({
       <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
         <div className="space-y-4 text-center lg:text-left">
           <h3 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white font-sans">
-            {isSelectingForMission ? 'Selecione até 4 Habilidades' : 'Seu Deck de Habilidades'}
+            {isSelectingForMission ? 'Selecione até 4 Competências' : 'Seu Deck de Competências'}
           </h3>
           <p className="text-zello-orange font-bold uppercase tracking-widest text-xs mt-2 select-none font-mono">
             {isSelectingForMission
-              ? `${selectedCount}/4 cards selecionados para esta missão`
-              : `Explore as ${AI_POWERS.length} habilidades fundamentais de IA`}
+              ? `${selectedCount}/4 competências selecionadas para esta missão`
+              : `Explore as ${AI_POWERS.length} competências estratégicas de liderança e IA`}
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
@@ -104,7 +104,7 @@ export const DeckSectionView: React.FC<DeckSectionViewProps> = ({
             </div>
             <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
             <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-              "As habilidades de IA são as ferramentas do seu sabre de luz. Aprenda a selecioná-las para criar soluções extraordinárias!"
+              "As competências profissionais sintonizam a Força ao seu sabre de luz. Aprenda a equilibrá-las de modo a guiar propostas seguras e criativas!"
             </p>
 
             <div className="pt-2">
@@ -162,6 +162,9 @@ export const DeckSectionView: React.FC<DeckSectionViewProps> = ({
                   if (!isSelectingForMission) {
                     setViewingPower(power);
                   }
+                }}
+                onConsult={() => {
+                  setViewingPower(power);
                 }}
               />
               {isSelectingForMission && (

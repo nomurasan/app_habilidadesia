@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import * as LucideIcons from 'lucide-react';
 import { Challenge } from '../types';
-import { AI_POWERS, AIPower } from '../data/powers';
+import { AI_POWERS } from '../data/powers';
 
 interface QuizSectionViewProps {
   levelChallenges: Challenge[];
@@ -10,12 +10,14 @@ interface QuizSectionViewProps {
   currentChallenge: Challenge | null;
   selectedLevel: 'PADAWAN' | 'JEDI' | 'YODA' | null;
   score: number;
-  selectedPower: string | null;
+  selectedSkillIds: number[];
   isAnswered: boolean;
+  isAnsweredCorrectly: boolean;
   timeLeft: number;
   aiFeedback: string | null;
   isAiFeedbackLoading: boolean;
-  handleSelection: (powerId: string) => void;
+  toggleSkillId: (skillId: number) => void;
+  confirmAnswers: () => Promise<void>;
   nextChallenge: () => void;
   setActiveVideo: (video: { title: string; url: string } | null) => void;
 }
@@ -26,12 +28,14 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
   currentChallenge,
   selectedLevel,
   score,
-  selectedPower,
+  selectedSkillIds,
   isAnswered,
+  isAnsweredCorrectly,
   timeLeft,
   aiFeedback,
   isAiFeedbackLoading,
-  handleSelection,
+  toggleSkillId,
+  confirmAnswers,
   nextChallenge,
   setActiveVideo,
 }) => {
@@ -43,18 +47,15 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
     );
   }
 
-  // Pick options matching either the correct power or the challenge's distractors
-  const options = AI_POWERS.filter((p) =>
-    [currentChallenge.correctPowerId, ...(currentChallenge.distractors || [])].includes(p.id)
-  );
+  // Under the new rules, each question must display exactly 6 skills
+  const optionIds = [
+    ...(currentChallenge.correctSkillIds || []),
+    ...(currentChallenge.incorrectSkillIds || [])
+  ];
 
-  const correct = options.find((p) => p.id === currentChallenge.correctPowerId);
-  const others = options.filter((p) => p.id !== currentChallenge.correctPowerId);
-
-  // Uniquely deduplicate options to avoid key collision
-  const finalOptions = Array.from(
-    new Map([correct, ...others.slice(0, 5)].filter(Boolean).map((p) => [p!.id, p!])).values()
-  ).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+  // Pick options matching the combined IDs and sort by numeric ID to interleave naturally
+  const finalOptions = AI_POWERS.filter((p) => optionIds.includes(Number(p.id)))
+    .sort((a, b) => Number(a.id) - Number(b.id));
 
   return (
     <motion.div
@@ -147,56 +148,126 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
               <p className="text-2xl md:text-3xl font-bold leading-tight text-white tracking-tight italic select-text font-sans">
                 "{currentChallenge.scenario}"
               </p>
+              
+              <div className="pt-2 flex items-center gap-2 select-none">
+                <LucideIcons.HelpCircle size={14} className="text-slate-400" />
+                <span className="text-xs font-semibold text-slate-400">
+                  {selectedLevel === 'PADAWAN' && 'Selecione a única Habilidade correta para este problema.'}
+                  {selectedLevel === 'JEDI' && 'Selecione as 2 Habilidades necessárias para solucionar o problema.'}
+                  {selectedLevel === 'YODA' && 'Selecione as Habilidades corretas (entre 3 e 5) para dominar o problema.'}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {finalOptions.map((power, idx) => {
-              const isCorrectBtn = power.id === currentChallenge.correctPowerId;
-              const isSelectedBtn = selectedPower === power.id;
+              const skillNum = Number(power.id);
+              const isSelected = selectedSkillIds.includes(skillNum);
+              const isCorrectSkill = currentChallenge.correctSkillIds.includes(skillNum);
               
+              // Visual styling depends on answered state
+              let cardStyle = 'bg-white/5 border-white/10 hover:border-zello-orange/50 hover:bg-white/10';
+              let indicatorColor = 'border-slate-500';
+              let indicatorIcon = null;
+
+              if (isAnswered) {
+                if (isCorrectSkill) {
+                  if (isSelected) {
+                    // Correctly selected
+                    cardStyle = 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.25)] ring-2 ring-emerald-500/20';
+                    indicatorColor = 'bg-emerald-500 border-emerald-500 text-white';
+                    indicatorIcon = <LucideIcons.Check size={12} />;
+                  } else {
+                    // Missed correct option
+                    cardStyle = 'bg-emerald-500/5 border-dashed border-emerald-500/60 opacity-90';
+                    indicatorColor = 'border-emerald-500 border-dashed border-2 text-emerald-500 flex items-center justify-center';
+                    indicatorIcon = <LucideIcons.Check size={10} />;
+                  }
+                } else {
+                  if (isSelected) {
+                    // Incorrectly selected
+                    cardStyle = 'bg-red-500/10 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] ring-2 ring-red-500/20';
+                    indicatorColor = 'bg-red-500 border-red-500 text-white';
+                    indicatorIcon = <LucideIcons.X size={12} />;
+                  } else {
+                    // Correctly avoided incorrect option
+                    cardStyle = 'bg-white/2 opacity-30 border-white/5';
+                    indicatorColor = 'border-white/10 bg-white/2';
+                  }
+                }
+              } else {
+                if (isSelected) {
+                  cardStyle = 'bg-white/10 border-zello-orange ring-2 ring-zello-orange/30 shadow-[0_0_15px_rgba(240,90,40,0.15)]';
+                  indicatorColor = 'bg-zello-orange border-zello-orange text-white';
+                  indicatorIcon = <LucideIcons.Check size={12} />;
+                }
+              }
+
               return (
                 <button
                   key={`game-opt-btn-${currentChallenge.id}-${power.id}-${idx}`}
                   disabled={isAnswered}
-                  onClick={() => handleSelection(power.id)}
+                  onClick={() => toggleSkillId(skillNum)}
                   className={`
-                    p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group h-32 flex flex-col justify-between cursor-pointer active:scale-98
-                    ${
-                      isAnswered && isCorrectBtn
-                        ? 'bg-zello-orange/20 border-zello-orange ring-4 ring-zello-orange/20 shadow-[0_0_20px_rgba(240,90,40,0.4)]'
-                        : isAnswered && isSelectedBtn && !isCorrectBtn
-                        ? 'bg-red-500/10 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
-                        : isAnswered
-                        ? 'bg-white/2 opacity-40 border-white/5'
-                        : 'bg-white/5 border-white/10 hover:border-zello-orange/50 hover:bg-white/10'
-                    }
+                    p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group h-36 flex flex-col justify-between cursor-pointer active:scale-[0.98] outline-none focus:ring-2 focus:ring-zello-orange/40
+                    ${cardStyle}
                   `}
                 >
-                  <div className="relative z-10 flex flex-col h-full justify-between select-none">
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 group-hover:bg-zello-orange group-hover:text-white transition-colors ${
-                        isAnswered && isCorrectBtn ? 'bg-zello-orange text-white' : ''
-                      }`}
-                    >
-                      {React.createElement((LucideIcons as any)[power.icon] || LucideIcons.Zap, { size: 16 })}
+                  <div className="relative z-10 flex flex-col h-full justify-between w-full select-none">
+                    <div className="flex items-center justify-between w-full">
+                      {/* Power Icon and ID */}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 transition-colors ${
+                            isSelected && !isAnswered ? 'bg-zello-orange/10 text-zello-orange' : ''
+                          } ${isAnswered && isCorrectSkill ? 'bg-emerald-500/10 text-emerald-500' : ''}`}
+                        >
+                          {React.createElement((LucideIcons as any)[power.icon] || LucideIcons.Zap, { size: 16 })}
+                        </div>
+                        {/* Beautifully left-aligned Skill Number tag */}
+                        <span className="text-[10px] font-black tracking-widest px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-slate-300">
+                          H{power.id}
+                        </span>
+                      </div>
+
+                      {/* Custom Checkbox */}
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${indicatorColor}`}>
+                        {indicatorIcon}
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-0.5">
+
+                    <div className="mt-4">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-0.5">
                         {power.category}
                       </span>
                       <h4 className="text-sm font-bold text-white leading-tight font-sans">{power.title}</h4>
                     </div>
                   </div>
-                  {isAnswered && isCorrectBtn && (
-                    <div className="absolute top-4 right-4 text-zello-orange">
-                      <LucideIcons.CheckCircle2 size={20} />
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
+
+          {/* Confirm Button for choices */}
+          {!isAnswered && (
+            <div className="flex justify-end pt-4">
+              <button
+                disabled={selectedSkillIds.length === 0}
+                onClick={confirmAnswers}
+                className={`
+                  px-10 py-4 font-black uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer font-sans
+                  ${
+                    selectedSkillIds.length > 0
+                      ? 'bg-zello-orange text-white hover:bg-zello-orange/90 shadow-[0_0_20px_rgba(240,90,40,0.3)]'
+                      : 'bg-white/10 text-slate-500 border border-white/5 cursor-not-allowed'
+                  }
+                `}
+              >
+                Confirmar Escolhas ({selectedSkillIds.length})
+              </button>
+            </div>
+          )}
 
           {isAnswered && (
             <motion.div
@@ -206,7 +277,7 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/30 shrink-0 select-none">
-                  {selectedPower === currentChallenge.correctPowerId ? (
+                  {isAnsweredCorrectly ? (
                     <LucideIcons.Trophy size={32} />
                   ) : (
                     <LucideIcons.X size={32} />
@@ -214,12 +285,12 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-2xl font-black uppercase italic leading-none font-sans">
-                    {selectedPower === currentChallenge.correctPowerId ? 'Excelente, Jedi!' : 'Treine mais, Padawan!'}
+                    {isAnsweredCorrectly ? 'Excelente, Jedi!' : 'Treine mais, Padawan!'}
                   </h4>
                   <p className="text-white/80 font-medium text-sm mt-2 max-w-xl">
-                    {selectedPower === currentChallenge.correctPowerId
-                      ? `Explicação: ${currentChallenge.explanation}`
-                      : 'Essa não era a resposta ideal para este cenário. Estude o conselho do Mestre para se aperfeiçoar.'}
+                    {isAnsweredCorrectly
+                      ? `Combinação Perfeita: ${currentChallenge.explanation}`
+                      : 'As habilidades escolhidas não cobrem o cenário de forma ideal. Estude o conselho do Mestre abaixo para aprender a melhor estratégia.'}
                   </p>
                 </div>
               </div>
@@ -248,7 +319,7 @@ export const QuizSectionView: React.FC<QuizSectionViewProps> = ({
                   <p className="text-sm italic text-slate-400 leading-relaxed font-medium">
                     {isAnswered
                       ? aiFeedback || currentChallenge.explanation
-                      : 'Para cada desafio, uma habilidade específica de IA deve ser aplicada. Analise os objetivos do caso corporativo antes de descarregar os seus poderes.'}
+                      : 'Para cada desafio de negócio, uma ou mais competências estratégicas precisam ser orquestradas de forma coordenada. Estude as opções cuidadosamente, marque suas respostas e clique em Confirmar Escolhas.'}
                   </p>
                 )}
               </div>

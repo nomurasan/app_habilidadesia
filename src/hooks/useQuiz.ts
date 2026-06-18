@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Challenge } from '../types';
 import { QuizService } from '../services/QuizService';
-import { AIPower } from '../data/powers';
 
 export function useQuiz(
   unlockedPowers: string[],
@@ -11,8 +10,9 @@ export function useQuiz(
   const [levelChallenges, setLevelChallenges] = useState<Challenge[]>([]);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [selectedPower, setSelectedPower] = useState<string | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isAnsweredCorrectly, setIsAnsweredCorrectly] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [isActive, setIsActive] = useState(false);
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
@@ -33,8 +33,9 @@ export function useQuiz(
       setLevelChallenges(shuffled);
       setCurrentChallengeIndex(0);
       setScore(0);
-      setSelectedPower(null);
+      setSelectedSkillIds([]);
       setIsAnswered(false);
+      setIsAnsweredCorrectly(false);
       setAiFeedback(null);
     } else {
       setLevelChallenges([]);
@@ -48,8 +49,8 @@ export function useQuiz(
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && !isAnswered && isActive) {
-      // Time-out: count as answered with "Nenhuma/Tempo Esgotado"
-      handleSelection('');
+      // Time-out: submit current selection (even if empty) automatically
+      confirmAnswers();
     }
 
     return () => {
@@ -60,30 +61,50 @@ export function useQuiz(
   const startChallengeTimer = () => {
     setTimeLeft(60);
     setIsAnswered(false);
-    setSelectedPower(null);
+    setIsAnsweredCorrectly(false);
+    setSelectedSkillIds([]);
     setAiFeedback(null);
     setIsActive(true);
   };
 
-  const handleSelection = async (powerId: string) => {
+  const toggleSkillId = (skillId: number) => {
+    if (isAnswered) return;
+    setSelectedSkillIds((prev) =>
+      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]
+    );
+  };
+
+  const confirmAnswers = async () => {
     if (isAnswered || !currentChallenge) return;
 
-    setSelectedPower(powerId);
     setIsAnswered(true);
     setIsActive(false);
     setIsAiFeedbackLoading(true);
 
-    const correctPowerId = currentChallenge.correctPowerId;
-    const isCorrect = powerId === correctPowerId;
+    // Calculate if correct
+    const allCorrectSelected = currentChallenge.correctSkillIds.every((id) =>
+      selectedSkillIds.includes(id)
+    );
+    const noIncorrectSelected = !currentChallenge.incorrectSkillIds.some((id) =>
+      selectedSkillIds.includes(id)
+    );
+    
+    // Exact match rule: all correct selected, none of incorrect selected
+    const correct = allCorrectSelected && noIncorrectSelected;
+    setIsAnsweredCorrectly(correct);
 
     let pointsAwarded = 0;
-    let nextUnlockedList = [...unlockedPowers];
+    const nextUnlockedList = [...unlockedPowers];
 
-    if (isCorrect) {
+    if (correct) {
       pointsAwarded = QuizService.calculatePoints(timeLeft);
-      if (powerId && !nextUnlockedList.includes(powerId)) {
-        nextUnlockedList.push(powerId);
-      }
+      // Unlock all the correct power/skill IDs
+      currentChallenge.correctSkillIds.forEach((id) => {
+        const idStr = String(id);
+        if (!nextUnlockedList.includes(idStr)) {
+          nextUnlockedList.push(idStr);
+        }
+      });
     }
 
     const nextScore = score + pointsAwarded;
@@ -94,10 +115,11 @@ export function useQuiz(
 
     // Call AI feedback service with static text fallback
     try {
-      // Find power details for names
-      const correctText = `Habilidade #${correctPowerId}`;
-      const selectedText = powerId ? `Habilidade #${powerId}` : 'Nenhuma/Tempo Esgotado';
-      
+      const correctText = currentChallenge.correctSkillIds.map((id) => `Habilidade #${id}`).join(', ');
+      const selectedText = selectedSkillIds.length > 0
+        ? selectedSkillIds.map((id) => `Habilidade #${id}`).join(', ')
+        : 'Nenhuma/Tempo Esgotado';
+
       const feedback = await QuizService.fetchQuizFeedback(
         currentChallenge.scenario,
         correctText,
@@ -127,8 +149,9 @@ export function useQuiz(
     setLevelChallenges([]);
     setCurrentChallengeIndex(0);
     setScore(0);
-    setSelectedPower(null);
+    setSelectedSkillIds([]);
     setIsAnswered(false);
+    setIsAnsweredCorrectly(false);
     setAiFeedback(null);
     setIsActive(false);
   };
@@ -140,13 +163,15 @@ export function useQuiz(
     currentChallengeIndex,
     currentChallenge,
     score,
-    selectedPower,
+    selectedSkillIds,
+    toggleSkillId,
     isAnswered,
+    isAnsweredCorrectly,
     timeLeft,
     aiFeedback,
     isAiFeedbackLoading,
     startChallengeTimer,
-    handleSelection,
+    confirmAnswers,
     nextChallenge,
     resetQuizState,
   };

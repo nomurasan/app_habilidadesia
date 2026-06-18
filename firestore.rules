@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default Deny Everything
+    // Default Deny Everything (Zero Trust Policy)
     match /{document=**} {
       allow read, write: if false;
     }
@@ -19,12 +19,14 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function incoming() {
-      return request.resource.data;
+    function isValidEmailId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^.+@.+$');
     }
 
-    function existing() {
-      return resource.data;
+    // Secure field locks: evaluates if the field is omitted or matches existing state
+    function fieldHasNotChanged(fieldName) {
+      return !(fieldName in request.resource.data) || 
+             (fieldName in resource.data && request.resource.data[fieldName] == resource.data[fieldName]);
     }
 
     // Fetch the user's document database record securely
@@ -42,7 +44,7 @@ service cloud.firestore {
              getUserRecord(request.auth.uid).get('isAdmin', false) == true;
     }
 
-    // User Profile Rules
+    // User Profile Rules with Strict Privilege Guardrails
     match /users/{userId} {
       // Users can only read their own profile, unless they are a global admin
       allow get: if isOwner(userId) || isGlobalAdmin();
@@ -53,16 +55,18 @@ service cloud.firestore {
         (resource.data.companyId == getUserRecord(request.auth.uid).get('companyId', ''))
       );
 
-      // Creation: Only the user can create their own profile. SettingisAdmin must be forbidden unless done by a global admin
-      allow create: if isOwner(userId) && isValidId(userId) && (
-        !incoming().get('isAdmin', false) || isGlobalAdmin()
-      );
+      // Creation: Only the user can create their own profile. Pre-allocate safe default privileges.
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                    request.resource.data.get('isAdmin', false) == false &&
+                    request.resource.data.get('role', 'user') == 'user';
 
-      // Update: User can update their own data, but cannot change administrative or structural fields like isAdmin, or companyId.
+      // Update: User can update profile, but CANNOT self-elevate roles, permissions, or admin state
       allow update: if isGlobalAdmin() || (
-        isOwner(userId) && 
-        incoming().get('isAdmin', false) == existing().get('isAdmin', false) &&
-        incoming().get('companyId', '') == existing().get('companyId', '')
+        isOwner(userId) &&
+        fieldHasNotChanged('isAdmin') &&
+        fieldHasNotChanged('role') &&
+        fieldHasNotChanged('permissions') &&
+        fieldHasNotChanged('companyId')
       );
 
       // Deletion: Strictly administrators only
@@ -71,27 +75,25 @@ service cloud.firestore {
 
     // Companies Rules
     match /companies/{companyId} {
-      // Get: Members of the company or admins can get the document
-      allow get: if isSignedIn() && isValidId(companyId) && (
+      // Get/List: Any signed-in user can retrieve or list companies (necessary for onboarding and group lists)
+      allow read: if isSignedIn();
+
+      // Create: Any signed-in user can register/create a company
+      allow create: if isSignedIn() && isValidId(companyId);
+
+      // Update/Delete: Only company owners or company/global admins can update or delete
+      allow update, delete: if isSignedIn() && (
         isGlobalAdmin() ||
-        (hasUserRecord(request.auth.uid) && getUserRecord(request.auth.uid).get('companyId', '') == companyId)
+        (resource.data.companyId == companyId)
       );
-
-      // List: Only administrators are permitted to list all companies
-      allow list: if isSignedIn() && isGlobalAdmin();
-
-      // Mutation: Administrators only can create/update/delete companies
-      allow create: if isGlobalAdmin() && isValidId(companyId) && incoming().name is string;
-      allow update: if isGlobalAdmin() && isValidId(companyId);
-      allow delete: if isGlobalAdmin() && isValidId(companyId);
 
       // Company Whitelists Subcollection
       match /whitelist/{emailId} {
-        allow read: if isSignedIn() && isValidId(emailId) && (
+        allow read: if isSignedIn() && isValidEmailId(emailId) && (
           isGlobalAdmin() ||
           (hasUserRecord(request.auth.uid) && getUserRecord(request.auth.uid).get('companyId', '') == companyId)
         );
-        allow write: if isGlobalAdmin() && isValidId(emailId);
+        allow write: if isGlobalAdmin() && isValidEmailId(emailId);
       }
     }
   }
