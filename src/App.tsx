@@ -2038,7 +2038,7 @@ export default function App() {
                     </div>
                     <div className="flex-1">
                       <div className="text-zello-orange text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Recado do Mestre Nomura</div>
-                      <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight leading-none">{selectedMission.subtitle}</h3>
+                      <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight leading-none">{selectedMission.title}</h3>
                     </div>
                   </div>
                 </div>

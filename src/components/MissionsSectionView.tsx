@@ -268,7 +268,7 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
               >
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">{mission.title}</div>
+                    <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">Missão {mission.id}</div>
                     {completedMissions[mission.id] && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full">
                         <LucideIcons.CheckCircle2 className="text-green-500" size={12} />
@@ -277,7 +277,7 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                     )}
                   </div>
                   <h4 className="text-2xl font-black text-white italic leading-tight uppercase group-hover:text-zello-orange transition-colors font-sans">
-                    {mission.subtitle}
+                    {mission.title}
                   </h4>
                   <div className="flex items-center gap-2 text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-4">
                     Ver Detalhes{' '}

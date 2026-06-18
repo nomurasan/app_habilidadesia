@@ -4,18 +4,18 @@ export const MISSIONS: Mission[] = [
   {
     id: 1,
     title: 'Acesso Democrático ao Conhecimento',
-    context: 'A organização está crescendo rapidamente e novas contratações ocorrem semanalmente. O RH recebe diariamente centenas de dúvidas repetitivas relacionadas a férias, benefícios, acesso aos sistemas internos, políticas corporativas, ferramentas utilizadas pela empresa e regras de onboarding. O tempo gasto nessas respostas reduz a capacidade do RH de atuar estrategicamente.',
-    reflection: 'Como utilizar Inteligência Artificial para democratizar o acesso ao conhecimento corporativo, garantindo respostas corretas, atualizadas, consistentes e seguras, sem comprometer a privacidade dos dados ou gerar informações incorretas?',
-    challenge: 'Proponha uma solução utilizando Inteligência Artificial para reduzir o volume de atendimentos repetitivos do RH, melhorar a experiência do colaborador e garantir respostas corretas e seguras.',
-    expectedResult: 'Estruturar uma solução baseada em conhecimento institucional, reduzindo atendimentos repetitivos, melhorando a experiência dos colaboradores e preservando governança e segurança da informação.',
-    maturityDescription: 'Avalia a capacidade de utilizar IA para gestão do conhecimento organizacional, demonstrando visão sistêmica, preocupação com governança, segurança, atualização contínua e escalabilidade da solução.',
+    context: 'A empresa está crescendo rapidamente e novos colaboradores são contratados todos os meses. O RH recebe diariamente inúmeras dúvidas sobre férias, benefícios, políticas internas, processos de onboarding e utilização dos sistemas corporativos. Grande parte dessas perguntas já possui resposta documentada, porém a equipe continua dedicando muitas horas para atendimentos repetitivos, reduzindo sua disponibilidade para atividades estratégicas.',
+    reflection: 'Como utilizar Inteligência Artificial para facilitar o acesso ao conhecimento organizacional, reduzir retrabalho e melhorar a experiência dos colaboradores, garantindo qualidade, atualização e segurança das informações?',
+    challenge: 'Proponha uma estratégia utilizando Inteligência Artificial para reduzir o volume de atendimentos repetitivos realizados pelo RH e tornar o conhecimento corporativo mais acessível.',
+    expectedResult: 'Construção de uma solução baseada em conhecimento institucional, reduzindo atendimentos repetitivos, melhorando a experiência dos colaboradores e preservando governança e segurança da informação.',
+    maturityDescription: 'Avalia a capacidade de utilizar IA para gestão do conhecimento, promovendo ganho de produtividade, democratização da informação e escalabilidade da solução.',
     recommendedSkillIds: [5, 9, 12],
-    hiddenReferenceSolution: 'Utilizar arquitetura RAG baseada em documentos oficiais, curadoria permanente das fontes, mecanismos de proteção contra vazamento de dados, revisão humana para situações críticas, versionamento das bases e atualização contínua.',
+    hiddenReferenceSolution: 'Implementar uma base de conhecimento estruturada, alimentada por documentos oficiais, com curadoria contínua, mecanismos de atualização, respostas padronizadas e proteção contra exposição de informações sensíveis.',
     // Backward compatibility UI fields
     subtitle: 'Acesso Democrático ao Conhecimento',
     items: ['políticas de férias', 'benefícios corporativos', 'acesso a sistemas', 'regras de onboarding', 'ferramentas internas'],
     expectedResults: [
-      'Estruturar uma solução baseada em conhecimento institucional, reduzindo atendimentos repetitivos',
+      'Construção de uma solução baseada em conhecimento institucional, reduzindo atendimentos repetitivos',
       'Melhorar a experiência dos colaboradores preservando governança e segurança da informação'
     ],
     recommendedPowerIds: ['5', '9', '12'],
@@ -23,162 +23,142 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: 2,
-    title: 'Sintetizadores de Relatórios Densos',
-    context: 'Os líderes de projetos e gestores da corporação sofrem com a sobrecarga informacional que atrasa a tomada de decisão no dia a dia. Eles precisam digerir com rapidez: atas longas de reuniões de conselho, resoluções de órgãos federais regulatórios, e-mails extensos de parceiros de tecnologia e manuais técnicos complexos de softwares legados.',
-    reflection: 'Como utilizar o letramento digital de modo a sumariar dados sem perder cláusulas contratuais vitais e garantindo a veracidade do resumo?',
-    challenge: 'Desenvolva uma abordagem estruturada usando Inteligência Artificial para condensar relatórios longos e complexos em resumos executivos altamente confiáveis, garantindo que termos contratuais e técnicos críticos não sejam ignorados ou alterados.',
-    expectedResult: 'Uma solução para processar múltiplos documentos volumosos, gerando resumos estruturados e acionáveis, acompanhados de um processo claro de checagem humana e rastreabilidade para mitigar alucinações.',
-    maturityDescription: 'Mapeia a competência do profissional em filtrar ruídos, sintetizar conhecimento complexo e liderar com ceticismo técnico na validação de dados críticos para tomadas de decisão rápidas e eficazes.',
-    recommendedSkillIds: [6, 9],
-    hiddenReferenceSolution: 'Utilização de prompts ricos com técnicas de Few-Shot e Engenharia de Contexto, carregamento de documentos em buffers protegidos, identificação de termos contratuais críticos por marcação de texto, uso de ferramentas de extração direta sem reescrever dados sensíveis e auditoria de conformidade com duplo crivo humano.',
+    title: 'Leitura Inteligente de Relatórios Executivos',
+    context: 'Você é gestor e recebeu diversos documentos para análise: relatórios financeiros, auditorias, atas de reunião e estudos técnicos. A diretoria precisa tomar decisões em poucas horas e o tempo disponível é insuficiente para leitura integral de todos os materiais.',
+    reflection: 'Como utilizar IA para acelerar a compreensão de grandes volumes de informação preservando contexto, qualidade e confiabilidade?',
+    challenge: 'Explique como a Inteligência Artificial pode apoiar a análise desses documentos e contribuir para uma tomada de decisão mais rápida e segura.',
+    expectedResult: 'Produção de resumos executivos confiáveis, destacando indicadores-chave, riscos, oportunidades e recomendações para apoio à decisão.',
+    maturityDescription: 'Mede a capacidade de transformar informação em conhecimento útil para tomada de decisão utilizando IA de forma crítica e responsável.',
+    recommendedSkillIds: [6, 7, 9],
+    hiddenReferenceSolution: 'Utilizar IA para resumir documentos, identificar indicadores relevantes, validar informações críticas e complementar análises utilizando fontes confiáveis.',
     // Backward compatibility UI fields
-    subtitle: 'Sintetizadores de Relatórios Densos',
-    items: ['atas longas de reuniões de conselho', 'resoluções de órgãos federais regulatórios', 'e-mails extensos de parceiros de tecnologia', 'manuais técnicos de softwares legados'],
+    subtitle: 'Leitura Inteligente de Relatórios Executivos',
+    items: ['relatórios financeiros', 'auditorias de processos', 'atas de conselho', 'estudos técnicos e manuais'],
     expectedResults: [
-      'Proposta de condensação de relatórios densos em resumos executivos confiáveis por IA',
-      'Processo de checagem humana e rastreabilidade para mitigar alucinações nas análises'
+      'Produção de resumos executivos confiáveis por IA',
+      'Processo de checagem humana e complementaridade com fontes adicionais de pesquisa'
     ],
-    recommendedPowerIds: ['6', '9'],
-    advisorHint: 'Gestores exigem máxima síntese com confiabilidade. Associe Resumir Conteúdos (6) e Curadoria de Conteúdo (9) para garantir a veracidade absoluta dos resumos.'
+    recommendedPowerIds: ['6', '7', '9'],
+    advisorHint: 'Gestores exigem máxima síntese com confiabilidade. Associe Resumir Conteúdos (6), Pesquisa Profunda (7) e Curadoria de Conteúdo (9) para garantir a veracidade absoluta dos resumos.'
   },
   {
     id: 3,
-    title: 'Prototipagem Criativa Acelerada',
-    context: 'A equipe de inovação necessita testar e validar rapidamente junto aos diretores um novo layout conceitual de embalagem de produto e banners de divulgação mercadológica. O tempo é crítico e a contratação de profissionais especializados de criação de massa atrasaria o pitch: imagens fotorrealistas de produtos piloto, rascunhos preliminares de banners virtuais, slogans empáticos alinhados à marca e storyboards rápidos para vídeos explicativos.',
-    reflection: 'De que maneira ferramentas generativas multimodais podem acelerar a experimentação e como equilibrar a velocidade rápida da máquina com o crivo estético e a verdade humana das entregas?',
-    challenge: 'Proponha um pipeline de experimentação rápida multimodal que combine geração de imagens conceituais, slogans e storyboards, mantendo a autenticidade da marca e a qualidade estética sob estrita supervisão criativa.',
-    expectedResult: 'Fluxo ágil de design e validação criativa de embalagens e criativos publicitários integrando IA generativa e refinamento humano, acelerando o tempo de lançamento em múltiplos cenários piloto.',
-    maturityDescription: 'Capacidade de orquestrar criatividade impulsionada por IA de forma ágil, integrando geração multimodal, consistência estética e inteligência de branding.',
-    recommendedSkillIds: [11],
-    hiddenReferenceSolution: 'Desenho de fluxos experimentais com ferramentas multimodais integradas, aplicação de prompts guiados por diretrizes da marca (brand guidelines), curadoria contínua das saídas geradas e supervisão direta feita por designers sêniores para certificar o tom artístico, impedindo o plágio involuntário e desalinhamento conceitual.',
+    title: 'Inovação para Resolver Problemas',
+    context: 'Sua organização deseja reduzir em 30% o tempo necessário para executar um processo importante, porém ainda não encontrou uma solução satisfatória. A liderança incentiva o uso da Inteligência Artificial para apoiar a geração de novas ideias.',
+    reflection: 'Como utilizar IA para ampliar a criatividade da equipe e apoiar processos estruturados de inovação?',
+    challenge: 'Descreva uma estratégia para utilizar Inteligência Artificial na pesquisa de alternativas e geração de soluções inovadoras para o problema apresentado.',
+    expectedResult: 'Desenvolvimento de um processo estruturado de inovação utilizando IA para pesquisa, benchmarking e geração de alternativas.',
+    maturityDescription: 'Avalia pensamento criativo, capacidade de inovação e utilização estratégica da IA.',
+    recommendedSkillIds: [7, 10, 11],
+    hiddenReferenceSolution: 'Pesquisa de tendências, benchmarking, construção de cenários futuros e geração estruturada de alternativas.',
     // Backward compatibility UI fields
-    subtitle: 'Prototipagem Criativa Acelerada',
-    items: ['imagens fotorrealistas de produtos piloto', 'rascunhos preliminares de banners virtuais', 'slogans empáticos alinhados à marca', 'storyboards rápidos para vídeos explicativos'],
+    subtitle: 'Inovação para Resolver Problemas',
+    items: ['pesquisa de tendências', 'benchmarking do mercado', 'construção de cenários', 'geração estruturada de alternativas'],
     expectedResults: [
-      'Pipeline de experimentação ágil multimodal integrando texto, imagens e storyboards',
-      'Fluxo de validação de entregas estéticas aliando o crivo criativo do especialista humano à IA'
+      'Desenvolvimento de um processo estruturado de inovação utilizando IA',
+      'Mapeamento de benchmarks de mercado e geração sistemática de ideias viáveis'
     ],
-    recommendedPowerIds: ['11'],
-    advisorHint: 'Aqui, a IA atua como um amplificador de ideias rápidas. Explore a força de Gerar Alternativas (11) para destravar múltiplos conceitos e embalagens.'
+    recommendedPowerIds: ['7', '10', '11'],
+    advisorHint: 'A inovação requer mapeamento e imaginação. Empregue Pesquisa Profunda (7) e Analisar Cenários (10) aliadas ao poder de Gerar Alternativas (11).'
   },
   {
     id: 4,
-    title: 'Radar de Inteligência e Validação Mercadológica',
-    context: 'A diretoria corporativa precisa subsidiar decisões estratégicas urgentes sobre novos competidores e desrupturas digitais. Entretanto, o excesso de informações dispersas, postagens superficiais na internet e dados potencialmente parciais criam insegurança técnica baseada em opiniões mercadológicas conflitantes e pesquisas estáticas antigas.',
-    reflection: 'Como o profissional pode agir de forma investigativa e cética, usando robôs de pesquisa sabendo cruzar premissas sem aceitar passivamente o output estatístico gerado pela máquina?',
-    challenge: 'Desenhar um hub analítico investigativo de mercado sustentado por ferramentas de pesquisa que localizam, validam e cruzam dados públicos, rebatendo boatos e reportando com exatidão científica as tendências.',
-    expectedResult: 'Instaurar rotinas de monitoramento concorrencial inteligente e fidedigno, apresentando fontes claras pesquisadas pelo robô e avaliadas sob rigoroso ceticismo metodológico.',
-    maturityDescription: 'Reflete competência em conduzir inteligência competitiva com profundidade, utilizando inteligência de pesquisa com total ceticismo de dados e rigor científico.',
+    title: 'Pesquisa Estratégica para Expansão',
+    context: 'Para planejar a expansão da empresa para novos mercados ou produtos, é crucial coletar e analisar um grande volume de dados externos. É necessário identificar concorrentes, tendências tecnológicas e mudanças de comportamento dos consumidores de forma ágil e confiável.',
+    reflection: 'De que forma a IA pode apoiar a busca e validação de informações mercadológicas estratégicas para orientar novos rumos corporativos?',
+    challenge: 'Elabore um plano estratégico de pesquisa concorrencial e mercadológica potencializado por inteligência analítica, definindo como evitar relatórios superficiais ou desatualizados.',
+    expectedResult: 'Mapeamento de concorrência e tendências mercadológicas amparado em fontes confiáveis e análise integrada de dados setoriais.',
+    maturityDescription: 'Capacidade de fundamentar tomadas de decisão mercadológicas de alto impacto através de inteligência de dados cruciais de mercado.',
     recommendedSkillIds: [7, 9, 10],
-    hiddenReferenceSolution: 'Varredura ativa na web usando motores de busca qualificados, cruzamento de dados de múltiplos relatórios setoriais, uso constante de instrução para citar links e referências diretas, auditoria sistemática contra notícias falsas e modismos mercadológicos, e validação executiva.',
+    hiddenReferenceSolution: 'Solução baseada em múltiplas fontes, curadoria e análise comparativa de cenários.',
     // Backward compatibility UI fields
-    subtitle: 'Radar de Inteligência e Validação Mercadológica',
-    items: ['opiniões mercadológicas conflitantes', 'pesquisas estáticas de consultorias antigas', 'risco de notícias falsas e modismos na área de inovação'],
+    subtitle: 'Pesquisa Estratégica para Expansão',
+    items: ['identificação de concorrentes', 'mapeamento de tendências de consumo', 'análise setorial de mercado', 'estruturação de relatórios'],
     expectedResults: [
-      'Hub analítico de investigação para rastrear novos entrantes e modelos concorrentes',
-      'Uso de táticas de inteligência para obrigar a IA a relatar e referenciar as fontes reais'
+      'Mapeamento de concorrência e tendências mercadológicas amparado em fontes de dados',
+      'Utilização de análises comparativas e cenários geradas de forma crítica'
     ],
     recommendedPowerIds: ['7', '9', '10'],
-    advisorHint: 'Ceticismo é fundamental ante relatórios de inteligência. Empregue Pesquisa Profunda (7) e Curadoria de Conteúdo (9) sob a ótica de Analisar Cenários (10).'
+    advisorHint: 'Cruze dados externos de fontes variadas. Associe Pesquisa Profunda (7) com Curadoria de Conteúdo (9) e trace estratégias fortes analisando cenários (10).'
   },
   {
     id: 5,
-    title: 'Atendimento Integrado Inteligente',
-    context: 'A empresa necessita modernizar seus canais para responder com rapidez e precisão a dados individuais dos cooperados, porém enfrenta lentidão pelo isolamento de sistemas internos que forçam os analistas a realizar buscas lentas de faturamento manualmente (prazos de entrega de mercadorias, pontuação atual em planos de benefícios, atualização cadastral de novos fornecedores).',
-    reflection: 'Quais competências e cuidados operacionais são exigidos de modo a desenhar um diálogo inteligente que de fato ajude sem frustrar o cliente e mantendo a curadoria humana sob as regras da LGPD?',
-    challenge: 'Proponha a arquitetura de um canal de atendimento inteligente integrado a bancos de dados legados corporativos para responder a perguntas rotineiras de faturamento e entregas de forma segura e imediata.',
-    expectedResult: 'Uma proposta de autoatendimento fluida e conectada (API/Database), contendo diretrizes rígidas de transição transparente para atendimento humano e mecanismos para preservar sigilo estrito de dados.',
-    maturityDescription: 'Avalia o preparo do grupo para projetar interações ricas e conversas integradas com sistemas corporativos, equilibrando agilidade automatizada e controle humano sob conformidade regulatória.',
-    recommendedSkillIds: [9, 12],
-    hiddenReferenceSolution: 'Mecanismo de orquestração conversacional integrado via APIs seguras com bancos de dados internos criptografados, filtragem de dados pessoais (PII) antes de qualquer interação externa com a IA, definição de regras rígidas para encaminhamento para atendentes humanos no caso de reclamações ou dúvidas complexas, e auditoria de satisfação.',
+    title: 'Atendimento Inteligente ao Cliente',
+    context: 'A empresa busca aprimorar a comunicação de suporte ao cliente final, respondendo dúvidas com agilidade, empatia e alinhamento institucional, garantindo que respostas a questões sensíveis não contenham mentiras ou violem a privacidade.',
+    reflection: 'Como equilibrar automação ágil no atendimento com segurança da informação, empatia humana e tom de voz unificado?',
+    challenge: 'Desenhe uma proposta de assistência de atendimento automatizada ou semi-assistida por IA que otimize os tempos de resposta mantendo conformidade com as regras da LGPD.',
+    expectedResult: 'Fluxo de atendimento com respostas ágeis, templates baseados em diretrizes e barreiras éticas contra o vazamento de dados privados.',
+    maturityDescription: 'Competência de gerenciar interações escaláveis com foco na excelência da experiência do usuário, governança e conformidade.',
+    recommendedSkillIds: [4, 5, 12],
+    hiddenReferenceSolution: 'Solução baseada em assistentes inteligentes, respostas padronizadas e revisão humana.',
     // Backward compatibility UI fields
-    subtitle: 'Atendimento Integrado Inteligente',
-    items: ['prazos de entrega de mercadorias', 'pontuação atual em planos de benefícios', 'atualização cadastral de novos fornecedores'],
+    subtitle: 'Atendimento Inteligente ao Cliente',
+    items: ['agilidade de resposta', 'empatia corporativa', 'cumprimento das regras LGPD', 'tom de voz unificado'],
     expectedResults: [
-      'Proposta de robô transacional conectado via API com bancos corporativos',
-      'Protocolos rígidos de segurança sob leis da LGPD e rota direta de escape humano'
+      'Fluxo de atendimento integrado com respostas ágeis e seguras',
+      'Estruturação de templates baseados em diretrizes sob rígida conformidade regulatória'
     ],
-    recommendedPowerIds: ['9', '12'],
-    advisorHint: 'Atendimento transacional exige precisão cirúrgica de segurança. Empregue Curadoria de Conteúdo (9) das fontes de dados associada ao Uso Seguro da IA (12).'
+    recommendedPowerIds: ['4', '5', '12'],
+    advisorHint: 'O atendimento precisa focar em clareza linguística e proteção de dados. Empregue Elaborar E-mails (4) e Criar Comunicados (5) amparados pelo Uso Seguro da IA (12).'
   },
   {
     id: 6,
-    title: 'Arquitetura de Fluxos de Trabalho Automatizados',
-    context: 'O faturamento mensal e o time financeiro desperdiçam dezenas de horas úteis coletando dados de extratos bancários, estruturando e formatando relatórios manuais de despesas em planilhas e encaminhando notificações esparsas por e-mail: digitação manual de extratos, formatação de dados comerciais, envio de cobranças de cortesia por e-mail e solicitações físicas de assinaturas de reembolsos.',
-    reflection: 'Como decompor esse problema corporativo histórico em fases sequenciais claras e robotizar essas pontes digitais sem demandar meses de desenvolvimento de softwares complexos de TI?',
-    challenge: 'Desenhe um plano de automação de ponta a ponta dos fluxos de contabilidade e reembolso de despesas corporativas, eliminando tarefas manuais repetitivas e acelerando o tempo de conciliação.',
-    expectedResult: 'Desenho lógico e operacional do novo fluxo automatizado de coleta e faturamento, integrando extração inteligente de recibos por IA, ferramentas de automatização sem código (No-Code/Low-Code) e auditorias de exceção.',
-    maturityDescription: 'Proficiência em engenharia de processos, decomposição de gargalos administrativos e uso tático de inteligência de automação para acelerar a eficiência sem demandar desenvolvimento complexo.',
-    recommendedSkillIds: [3, 10],
-    hiddenReferenceSolution: 'Implementação de pipeline automatizado usando ferramentas de integração no-code (ex. Make, Zapier), extração de dados estruturados de recibos e notas fiscais por OCR/IA, padronização em planilhas/bancos de dados centralizados, envio automático de alertas de e-mail parametrizados e manutenção de um fluxo humano de aprovação de pagamentos.',
+    title: 'Identificando Oportunidades de Automação',
+    context: 'Diversas equipes administrativas na organização dedicam horas de trabalho manual para tarefas burocráticas repetitivas de digitação, reconciliação financeira e envio de lembretes, gerando lentidão de processos.',
+    reflection: 'De qual maneira podemos analisar as tarefas diárias, priorizar o que realmente trará mais retorno de eficiência e programar automações de processos?',
+    challenge: 'Mapeie um gargalo improdutivo no cotidiano e detalhe uma solução automatizada prioritária para aumentar o fôlego operacional do departamento.',
+    expectedResult: 'Cronograma funcional e estruturado de automatização de processos repetitivos, com priorização explícita e impacto previsto.',
+    maturityDescription: 'Aptidão em engenharia de processos operacionais de alta eficiência, focando em otimização de tempo e recursos com tecnologias inteligentes de automação.',
+    recommendedSkillIds: [2, 3, 11],
+    hiddenReferenceSolution: 'Solução baseada em identificação de gargalos, priorização e roadmap incremental.',
     // Backward compatibility UI fields
-    subtitle: 'Arquitetura de Fluxos de Trabalho Automatizados',
-    items: ['digitação manual de extratos', 'formatação de dados comerciais', 'envio de cobranças de cortesia por e-mail', 'solicitações físicas de assinaturas de reembolsos'],
+    subtitle: 'Identificando Oportunidades de Automação',
+    items: ['mapeamento de gargalos processuais', 'análise financeira e operacional', 'priorização de fluxos manuais', 'robotização de tarefas'],
     expectedResults: [
-      'Decomposição e mapeamento analítico do fluxo manual do faturamento empresarial',
-      'Arquitetura automatizada usando robotização no-code e supervisão do assistente'
+      'Cronograma estruturado de automatização de processos repetitivos',
+      'Definição clara de roadmaps incrementais para implantação sem ruídos na TI'
     ],
-    recommendedPowerIds: ['3', '10'],
-    advisorHint: 'Automatizar é conectar pontes lógicas. Use o poder de Priorizar Atividades (3) no fôlego de processamento e projete os impactos através de Analisar Cenários (10).'
+    recommendedPowerIds: ['2', '3', '11'],
+    advisorHint: 'Antes de automatizar, planeje e priorize o que trará mais valor. Combine Planejar Semana (2), Priorizar Atividades (3) e Gerar Alternativas (11).'
   },
   {
     id: 7,
-    title: 'Orquestração de Agentes Corporativos Autônomos',
-    context: 'Durante eventos corporativos globais, a liderança ouve sobre sistemas autônomos que conversam entre si, pesquisam preços, agendam reuniões e tomam passos operacionais completos sem interferência de usuários: agentes inteligentes autônomos, redes cooperativas de robôs de dados e trabalhador virtual executando tarefas complexas por fases.',
-    reflection: 'Como o letramento corporativo foca na supervisão destes robôs agregados? Quais barreiras morais, técnicas e operacionais devem existir para governar sistemas autônomos mantendo o Humano-na-Alça?',
-    challenge: 'Projete um ecossistema cooperativo de multiagentes autônomos para gerir rotinas de compras ou captação comercial, estruturando limites de poder, escopo de ação e o fluxo de aprovação obrigatório de humanos.',
-    expectedResult: 'Um plano operacional consistente para agentes autônomos com limites rígidos de alocação de verbas, relatórios automáticos de auditoria e gatilhos explícitos de intervenção e decisão humana soberana.',
-    maturityDescription: 'Avalia a capacidade analítica e de governança do grupo para planejar sistemas corporativos autônomos de alta complexidade com rigor operacional e salvaguardas éticas.',
-    recommendedSkillIds: [10, 11],
-    hiddenReferenceSolution: 'Uso de frameworks de desenvolvimento de agentes (ex. Langchain, CrewAI), limite de orçamentos e transações impostos por código imutável no backend, validação humana em todas as tomadas de decisões críticas, registro detalhado de logs operacionais auditáveis e rotina diária de verificação técnica dos robôs.',
+    title: 'Assistente Inteligente para Apoio ao Trabalho',
+    context: 'Os colaboradores precisam de um copiloto inteligente no dia a dia para auxiliar na redação de relatórios, síntese de reuniões, geração de rascunhos rápidos de propostas comerciais e outras análises cotidianas em ambiente corporativo seguro.',
+    reflection: 'Como disponibilizar uma ferramenta de assistência de IA generativa de forma ampla sem expor segredos industriais ou incentivar o uso acrítico de alucinações?',
+    challenge: 'Proponha diretrizes de uso e configuração de um assistente virtual corporativo seguro para otimizar o trabalho escritural sem expor dados internos sigilosos.',
+    expectedResult: 'Diretrizes de adoção segura de copiloto de produtividade com controle de qualidade e integridade do conhecimento corporativo.',
+    maturityDescription: 'Capacidade de liderar a adoção de assistentes cognitivos cotidianos focando em aumento de escala operacional, eficiência individual e ética organizacional.',
+    recommendedSkillIds: [6, 9, 11, 12],
+    hiddenReferenceSolution: 'Solução baseada em assistente conectado a fontes confiáveis, curadoria, proteção de dados e revisão humana.',
     // Backward compatibility UI fields
-    subtitle: 'Orquestração de Agentes Corporativos Autônomos',
-    items: ['agentes inteligentes autônomos', 'redes cooperativas de robôs de dados', 'trabalhador virtual executando tarefas complexas por fases'],
+    subtitle: 'Assistente Inteligente para Apoio ao Trabalho',
+    items:['redação de propostas rápidas', 'síntese de e-mails e atas de reunião', 'proteção contra vazamento de propriedade intelectual', 'refinamento analítico'],
     expectedResults: [
-      'Proposta conceitual detalhada para guiar redes cooperativas de robôs de dados',
-      'Definição das premissas de fronteiras de ação e limites técnicos de fôlego comercial da IA'
+      'Políticas de uso e configuração de assistentes em ambientes homologados de TI',
+      'Processo para curar as fontes de conhecimento interno, blindando a privacidade da marca'
     ],
-    recommendedPowerIds: ['10', '11'],
-    advisorHint: 'Agentes autônomos trazem alta capacidade, mas exigem rígido controle ético. Equilibre Analisar Cenários (10) e Gerar Alternativas (11).'
+    recommendedPowerIds: ['6', '9', '11', '12'],
+    advisorHint: 'O suporte de produtividade do colaborador exige curadoria e proteção cibernética. Associe Resumir Conteúdos (6), Curadoria de Conteúdo (9), Gerar Alternativas (11) e Uso Seguro da IA (12).'
   },
   {
     id: 8,
-    title: 'Mestrado Corporativo em Governança, Ética e Privacidade',
-    context: 'A pressa e o deslumbramento de colaboradores juniores em usar canais externos públicos de IA acenderam o alerta vermelho no conselho corporativo devido a flagrantes riscos de segurança: vazamento de dados proprietários de balanços por cópias de textos, inserção perigosa de CPFs e telefones de clientes no chat, e utilização irracional de respostas estatísticas e vieses de inclusão em decisões de vagas.',
-    reflection: 'Quais diretrizes imperativas devem guiar o letramento digital em IA para blindar a corporação, respeitar a privacidade coletiva e zelar pelo compliance regulatório e LGPD?',
-    challenge: 'Esboce um comitê e uma política de governança de Inteligência Artificial para a empresa, determinando salvaguardas contra vazamento de propriedade intelectual, proteção contra alucinações e exclusão de vieses preconceituosos de tomada de decisão.',
-    expectedResult: 'Instalação de uma cartilha corporativa integrada de boas práticas em IA, ferramentas recomendadas com segurança homologada de TI, além de canal transparente de denúncia e auditoria contínua de modelos.',
-    maturityDescription: 'Mapeia a compreensão madura e senil de governança cibernética, responsabilidade social, LGPD e limites éticos indispensáveis na orquestração corporativa de modelos inteligentes.',
-    recommendedSkillIds: [12],
-    hiddenReferenceSolution: 'Instituição de comitê multidisciplinar de ética e IA, estabelecimento de sandbox corporativo homologado pela TI, filtros automatizados de segurança e anonimização de dados pré-envios, auditoria contínua de vieses em seleções e avaliação algorítmica rigorosa sobre balanços sigilosos.',
+    title: 'Uso Responsável da Inteligência Artificial',
+    context: 'Com a rápida proliferação de soluções generativas na internet, a diretoria exige a estruturação urgente de políticas formais de conformidade jurídica para evitar vazamento de dados de clientes, violação de direitos autorais ou discriminação por algoritmos.',
+    reflection: 'Quais salvaguardas regulatórias e princípios de governança devem ser estabelecidos para apoiar a inovação contínua de forma ética e segura?',
+    challenge: 'Elabore as diretrizes essenciais para uma Cartilha de Uso Seguro da IA na empresa, determinando papéis de fiscalização e proteção da privacidade.',
+    expectedResult: 'Política institucional estabelecida de inovação segura, contendo diretrizes claras de conformidade com a LGPD e barreiras éticas sistêmicas.',
+    maturityDescription: 'Nível elevado de maturidade estratégica e ética na orquestração corporativa de modelos de IA, preservando direitos civis, responsabilidade social e reputação da marca.',
+    recommendedSkillIds: [9, 10, 11, 12],
+    hiddenReferenceSolution: 'Solução baseada em política institucional contemplando LGPD, governança, classificação das informações, treinamento, gestão de riscos e monitoramento contínuo.',
     // Backward compatibility UI fields
-    subtitle: 'Mestrado Corporativo em Governança, Ética e Privacidade',
-    items: ['vazamento de dados proprietários de balanços', 'inserção perigosa de CPFs e telefones no chat público', 'utilização irracional de respostas estatísticas e viés nas vagas'],
+    subtitle: 'Uso Responsável da Inteligência Artificial',
+    items: ['políticas institucionais de conformidade jurídica', 'salvaguardas da LGPD', 'vazamento de dados privados de colaboradores', 'auditorias sistemáticas de discriminação de algoritmos'],
     expectedResults: [
-      'Planilha e códigos práticos de anonimização e blindagem contra vazamento de dados',
-      'Manual interno de conduta e regulamentos éticos para uso livre de modelos públicos'
+      'Política corporativa oficial de governança estabelecida contra riscos cibernéticos',
+      'Treinamentos contínuos de privacidade de rede e triagem de riscos antes de publicações'
     ],
-    recommendedPowerIds: ['12'],
-    advisorHint: 'Segurança e conformidade andam juntas. Use o Uso Seguro da IA (12) como a barreira imperativa e inegociável de governança ética.'
-  },
-  {
-    id: 9,
-    title: 'Arquitetos do Letramento e Inovação Empresarial',
-    context: 'Como clímax desta Jornada Jedi, os participantes enfrentam o Conselho Maior. Eles devem identificar um processo real que atrasa sua área de trabalho na empresa e desenhar um plano refinado completo aliando inovação, segurança, pragmatismo e colaboração em IA: identificar e quantificar um gargalo real do departamento, selecionar as competências táticas indispensáveis, modelar o prompt robusto com Engenharia de Contexto e determinar o crivo de validação da ética e do Julgamento Humano.',
-    reflection: 'De que maneira podemos usar tudo o que foi aprendido para gerar impactos de valor reais, seguros e mensuráveis para nossa equipe e clientes, sob rígiga governança empresarial?',
-    challenge: 'Formule um projeto robusto de implantação de Inteligência Artificial na sua área específica de atuação na empresa, resolvendo um gargalo operacional real mapeado e cobrindo métricas, segurança e validação ética.',
-    expectedResult: 'Um plano executivo profissional pronto para o Pitch diante da diretoria, combinando diagnóstico claro, arquitetura do fluxo inteligente de processos e pessoas, conformidade com a LGPD e indicadores tangíveis de sucesso.',
-    maturityDescription: 'Avalia o nível máximo de prontidão estratégica (Arquiteto de Inovação), integrando habilidades práticas de resolução de problemas, visão corporativa ética, pensamento crítico e liderança transformadora.',
-    recommendedSkillIds: [3, 10, 11],
-    hiddenReferenceSolution: 'Mapeamento rigoroso de indicadores (KPIs) operacionais, desenho analítico de fluxograma híbrido (IA + humano), política estrita de segurança e anonimização de dados (TI/LGPD) e validação iterativa baseada na verdade e excelência humana.',
-    // Backward compatibility UI fields
-    subtitle: 'Arquitetos do Letramento e Inovação Empresarial',
-    items: ['identificar e quantificar um gargalo real', 'selecionar as competências táticas indispensáveis', 'modelar o prompt robusto com Engenharia de Contexto', 'determinar o crivo de validação da ética e do Julgamento Humano'],
-    expectedResults: [
-      'Diagnóstico completo e sólido do gargalo de processo departamental selecionado',
-      'Proposta executiva robusta integrando inovação ágil, conformidade de dados e KPIs'
-    ],
-    recommendedPowerIds: ['3', '10', '11'],
-    advisorHint: 'Arquiteto Jedi, integre todas as diretrizes da Ordem. Acione Priorizar Atividades (3), Analisar Cenários (10) e Gerar Alternativas (11).'
+    recommendedPowerIds: ['9', '10', '11', '12'],
+    advisorHint: 'Governança robusta protege o futuro digital da corporação. Tralhe Curadoria de Conteúdo (9), Analise Cenários (10), visualize e Gere Alternativas (11) sob o imperativo de Uso Seguro da IA (12).'
   }
 ];

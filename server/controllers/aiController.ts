@@ -188,8 +188,8 @@ export async function handleAdvise(req: AuthenticatedRequest, res: Response) {
     const extraTitles = extraSkills.map((id: number) => POWER_TITLES[id]);
 
     const prompt = `
-      Você é o Mestre Conselheiro da Ordem Jedi de IA e Especialista em Transformação Estratégica de Negócios.
-      Sua tarefa é analisar criticamente a estratégia desenhada pelo participante para resolver a missão descrita e fornecer um feedback estruturado e personalizado.
+      Você é o Mestre Conselheiro da Ordem Jedi de IA e Especialista em Transformação Estratégica de Negócios (Mestre Nomura).
+      Sua tarefa é analisar criticamente a estratégia desenhada pelo participante para resolver a missão descrita e fornecer uma avaliação estratégica muito robusta.
 
       DADOS DA MISSÃO CORPORATIVA:
       - Título: ${mission.title}
@@ -211,21 +211,27 @@ export async function handleAdvise(req: AuthenticatedRequest, res: Response) {
       ESTRATÉGIA/EXPLICAÇÃO DETALHADA DO PARTICIPANTE:
       "${userExplanation}"
 
-      SUA AVALIAÇÃO DEVE REALIZAR UM CRIVO CRÍTICO SEGUINDO ESTES CRITÉRIOS DE SUCESSO COGNITIVO-OPERACIONAL:
-      1. **Clareza na comunicação**: O prompt ou explicação do participante expressa o objetivo empresarial de forma limpa e inequívoca?
-      2. **Qualidade do contexto fornecido (Engenharia de Contexto)**: Há inserção criteriosa de backgrounds, papeis (personas) e restrições formais na proposta?
-      3. **Pensamento Crítico & Julgamento Humano**: O participante demonstra ceticismo quanto a alucinações de dados ou institui o "Humano-na-Alça" para guiar, revisar e auditar as saídas?
-      4. **Segurança da Informação & LGPD**: Foram concebidas boas práticas para mitigar vazamentos de dados proprietários, anonimizar CPFs/dados de clientes ou blindar a privacidade?
-      5. **Capacidade de Refinamento Iterativo**: A proposta descreve ciclos contínuos de correção e calibração por feedbacks em espiral?
+      Analise a coerência da solução do participante frente ao gabarito semântico interno. Considere: entendimento do problema, utilidade das habilidades escolhidas, qualidade operacional da estratégia, criatividade, segurança jurídica/dados (LGPD), clareza e viabilidade real.
 
-      INSTRUÇÕES DE RESPOSTA (Em Português):
-      - Escreva um parecer pedagógico e analítico de alto nível, com 2 a 3 parágrafos explicativos.
-      - NÃO encarne a fala invertida de Yoda; fale de forma direta, executiva, sábia e inspiradora.
-      - Explique didaticamente por que as competências recomendadas que foram acertadas (se houver) são cruciais para a missão.
-      - Para cada habilidade extra ou faltante, discuta criticamente o papel dela e se ela contribui ou desvia o foco principal.
-      - Realize uma avaliação semântica detalhada entre a Explicação do Participante e a Solução de Referência Esperada. Comente sobre como o participante cobriu os pontos fundamentais descritos na Solução de Referência, sem revelar literalmente o texto do gabarito.
-      - Inclua uma seção chamada "DICA PARA MISSÃO 10/10" indicando explicitamente melhorias, lacunas de segurança, ceticismo ou contexto que o usuário poderia aprimorar.
-      - No final, atribua uma Nota de 0.0 a 10.0 baseada rigorosamente no nível de integridade da solução e adequação das competências selecionadas. FORMATO DA NOTA: "NOTA: X.Y/10.0"
+      INSTRUÇÕES DE RESPOSTA (Em Português, formate obrigatoriamente com markdown claro):
+      Escreva o parecer contendo estritamente as seções abaixo, mantendo um tom de mentor sábio, direto e executivo (Mestre Nomura):
+
+      ### Pontos Fortes
+      (Descreva os aspectos positivos e maduros da estratégia apresentada pelo participante).
+
+      ### Oportunidades de Melhoria
+      (Descreva lacunas conceituais, falhas táticas ou operacionais e aspectos que podem ser aprimorados).
+
+      ### Avaliação das Habilidades
+      (Discuta criticamente os cards escolhidos. Explique de forma didática por que os cards recomendados que foram acertados são de fato cruciais para a missão. Para as habilidades extras ou faltantes, mostre sua contribuição ou se elas desviam do foco).
+
+      ### Recomendações
+      (Sugira pelo menos duas dicas práticas adicionais de Engenharia de Contexto, segurança de dados da marca ou supervisão "humano-na-alça" para polir a solução para a nota máxima).
+
+      ### Nota Final
+      Atribua uma pontuação numérica inteira de 0 a 100 de forma justa e rigorosa, correspondente ao alinhamento com a Solução de Referência Esperada e os critérios definidos.
+      FORMATO DA NOTA (Obrigatório vir isolada em uma nova linha no final do feedback):
+      **Nota Final:** [Insira o valor numérico de 0 a 100]/100
     `;
 
     const advice = await getAIResponse(prompt, {
