@@ -186,99 +186,57 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
         </div>
       )}
 
-      {!selectedMission ? (
-        <div key="mission-list-container" className="space-y-12">
-          <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
-            <div className="space-y-4 text-center lg:text-left flex-1 font-sans">
-              <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">
-                Missões Táticas
-              </h2>
-              <p className="text-slate-400 font-medium">
-                Selecione uma missão para explorar cenários reais de aplicação de IA
-              </p>
+      {!selectedMission ? (() => {
+        const padawanMissions = MISSIONS.filter((m) => m.id >= 1 && m.id <= 3);
+        const jediMissions = MISSIONS.filter((m) => m.id >= 4 && m.id <= 6);
+        const yodaMissions = MISSIONS.filter((m) => m.id >= 7 && m.id <= 8);
 
-              <div className="flex justify-center lg:justify-start">
-                <button
-                  onClick={() => setGameState('home')}
-                  className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors cursor-pointer font-sans"
-                >
-                  Voltar ao Início
-                </button>
-              </div>
-            </div>
+        const isMissionCompleted = (id: number) => {
+          return !!(completedMissions[String(id)] || completedMissions[id]);
+        };
 
-            {/* Mestre Nomura Coaching banner */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
-              <div className="relative shrink-0 select-none">
-                <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
-                <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
-                  <img
-                    src="/Mestre Nomura.png"
-                    alt="Mestre Nomura"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover object-top"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+        const isPadawanPassed = isMissionCompleted(1) && isMissionCompleted(2) && isMissionCompleted(3);
+        const isJediPassed = isMissionCompleted(4) && isMissionCompleted(5) && isMissionCompleted(6);
+
+        const renderMissionCard = (mission: Mission, isLocked: boolean) => {
+          const isCompleted = isMissionCompleted(mission.id);
+          return (
+            <button
+              key={`msn-card-list-v4-${mission.id}`}
+              disabled={isLocked}
+              onClick={() => setSelectedMission(mission)}
+              className={`group relative p-8 bg-white/5 border rounded-3xl text-left transition-all duration-300 overflow-hidden ${
+                isLocked
+                  ? 'border-white/5 opacity-40 cursor-not-allowed filter grayscale'
+                  : isCompleted
+                  ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_30px_rgba(34,197,94,0.1)] cursor-pointer active:scale-98'
+                  : 'border-white/10 hover:border-zello-orange/50 cursor-pointer active:scale-98'
+              }`}
+            >
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">Missão {mission.id}</div>
+                  {isCompleted ? (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full">
+                      <LucideIcons.CheckCircle2 className="text-green-500" size={12} />
+                      <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Concluída</span>
+                    </div>
+                  ) : isLocked ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/5 rounded-full">
+                      <LucideIcons.Lock className="text-slate-500" size={10} />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Bloqueada</span>
+                    </div>
+                  ) : null}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
-                  <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
-                </div>
-              </div>
-
-              <div className="text-center sm:text-left space-y-2 flex-1">
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                    Jedi Mentor
-                  </span>
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
-                <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
-                  "As missões táticas vão exigir foco e sabedoria. Combine as competências profissionais da sua coleção para resolver os desafios estratégicos reais!"
-                </p>
-
-                <div className="pt-2">
-                  <button
-                    onClick={() =>
-                      setActiveVideo({
-                        title: 'Como Funcionam as Missões?',
-                        url: 'https://www.youtube.com/embed/G1rbjZL8o8E?rel=0',
-                      })
-                    }
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn font-sans"
-                  >
-                    <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
-                    Como Funcionam as Missões?
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none">
-            {MISSIONS.map((mission, idx) => (
-              <button
-                key={`msn-card-list-v4-${mission.id}-${idx}`}
-                onClick={() => setSelectedMission(mission)}
-                className={`group relative p-8 bg-white/5 border rounded-3xl text-left transition-all duration-300 overflow-hidden cursor-pointer active:scale-98 ${
-                  completedMissions[mission.id]
-                    ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_30px_rgba(34,197,94,0.1)]'
-                    : 'border-white/10 hover:border-zello-orange/50'
-                }`}
-              >
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-zello-orange text-xs font-black uppercase tracking-[0.2em]">Missão {mission.id}</div>
-                    {completedMissions[mission.id] && (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full">
-                        <LucideIcons.CheckCircle2 className="text-green-500" size={12} />
-                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Concluída</span>
-                      </div>
-                    )}
-                  </div>
-                  <h4 className="text-2xl font-black text-white italic leading-tight uppercase group-hover:text-zello-orange transition-colors font-sans">
-                    {mission.title}
-                  </h4>
+                <h4 className="text-2xl font-black text-white italic leading-tight uppercase group-hover:text-zello-orange transition-colors font-sans">
+                  {mission.title}
+                </h4>
+                {isLocked ? (
+                  <p className="text-xs font-bold text-zello-orange mt-2 flex items-center gap-1">
+                    <LucideIcons.Lock size={12} />
+                    <span>Complete a fase anterior primeiro</span>
+                  </p>
+                ) : (
                   <div className="flex items-center gap-2 text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-4">
                     Ver Detalhes{' '}
                     <LucideIcons.ChevronRight
@@ -286,15 +244,139 @@ export const MissionsSectionView: React.FC<MissionsSectionViewProps> = ({
                       className="group-hover:translate-x-1 transition-transform"
                     />
                   </div>
+                )}
+              </div>
+              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                <LucideIcons.Target size={80} />
+              </div>
+            </button>
+          );
+        };
+
+        return (
+          <div key="mission-list-container" className="space-y-12">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8 pb-8 border-b border-white/5">
+              <div className="space-y-4 text-center lg:text-left flex-1 font-sans">
+                <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">
+                  Missões Táticas
+                </h2>
+                <p className="text-slate-400 font-medium">
+                  Selecione uma missão para explorar cenários reais de aplicação de IA
+                </p>
+
+                <div className="flex justify-center lg:justify-start">
+                  <button
+                    onClick={() => setGameState('home')}
+                    className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors cursor-pointer font-sans"
+                  >
+                    Voltar ao Início
+                  </button>
                 </div>
-                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                  <LucideIcons.Target size={80} />
+              </div>
+
+              {/* Mestre Nomura Coaching banner */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 border border-white/15 rounded-[32px] max-w-lg w-full shadow-2xl hover:border-zello-orange/30 transition-all duration-300 group hover:bg-white/[0.07] text-left">
+                <div className="relative shrink-0 select-none">
+                  <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-zello-orange to-yellow-500 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300"></div>
+                  <div className="relative w-24 h-24 rounded-full border-2 border-zello-orange overflow-hidden shadow-[0_0_25px_rgba(240,90,40,0.4)] bg-zinc-950 flex items-center justify-center">
+                    <img
+                      src="/Mestre Nomura.png"
+                      alt="Mestre Nomura"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover object-top"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zello-orange/15 to-transparent pointer-events-none"></div>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-zinc-900 border border-zello-orange flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform duration-300">
+                    <LucideIcons.Zap size={14} className="text-zello-orange fill-zello-orange animate-pulse" />
+                  </div>
                 </div>
-              </button>
-            ))}
+
+                <div className="text-center sm:text-left space-y-2 flex-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-[9px] bg-zello-orange/20 text-zello-orange border border-zello-orange/30 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                      Jedi Mentor
+                    </span>
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  </div>
+                  <h3 className="text-lg font-black text-white italic uppercase tracking-wider mb-0.5 font-sans">Mestre Nomura</h3>
+                  <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-[280px]">
+                    "As missões táticas vão exigir foco e sabedoria. Combine as competências profissionais da sua coleção para resolver os desafios estratégicos reais!"
+                  </p>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() =>
+                        setActiveVideo({
+                          title: 'Como Funcionam as Missões?',
+                          url: 'https://www.youtube.com/embed/G1rbjZL8o8E?rel=0',
+                        })
+                      }
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zello-orange hover:bg-zello-orange/90 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(240,90,40,0.3)] hover:shadow-[0_0_30px_rgba(240,90,40,0.5)] transition-all duration-300 cursor-pointer group/btn font-sans"
+                    >
+                      <LucideIcons.Play size={8} className="fill-white text-white group-hover/btn:scale-110 transition-transform" />
+                      Como Funcionam as Missões?
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stage Categories */}
+            <div className="space-y-12">
+              {/* Padawan Stage */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 select-none">
+                  <span className="text-lg font-black uppercase tracking-widest text-[#6366f1] italic font-sans flex items-center gap-2">
+                    Nível Padawan (Iniciante)
+                  </span>
+                  <div className="h-px bg-[#6366f1]/20 flex-1"></div>
+                  <span className="text-[10px] font-bold text-slate-500 px-3 py-1 bg-white/5 border border-white/10 rounded-full uppercase tracking-wider font-sans">
+                    {padawanMissions.filter(m => isMissionCompleted(m.id)).length} / 3 Concluídas
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none font-sans">
+                  {padawanMissions.map((mission) => renderMissionCard(mission, false))}
+                </div>
+              </div>
+
+              {/* Jedi Stage */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 select-none">
+                  <span className="text-lg font-black uppercase tracking-widest text-zello-orange italic font-sans flex items-center gap-2">
+                    Nível Jedi (Intermediário)
+                    {!isPadawanPassed && <LucideIcons.Lock size={16} className="text-slate-500" />}
+                  </span>
+                  <div className="h-px bg-zello-orange/20 flex-1"></div>
+                  <span className="text-[10px] font-bold text-slate-500 px-3 py-1 bg-white/5 border border-white/10 rounded-full uppercase tracking-wider font-sans">
+                    {isPadawanPassed ? `${jediMissions.filter(m => isMissionCompleted(m.id)).length} / 3 Concluídas` : '🔒 Requer fase Padawan 100% concluída'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none font-sans">
+                  {jediMissions.map((mission) => renderMissionCard(mission, !isPadawanPassed))}
+                </div>
+              </div>
+
+              {/* Yoda Stage */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 select-none">
+                  <span className="text-lg font-black uppercase tracking-widest text-yellow-500 italic font-sans flex items-center gap-2">
+                    Nível Yoda (Lendário)
+                    {!isJediPassed && <LucideIcons.Lock size={16} className="text-slate-500" />}
+                  </span>
+                  <div className="h-px bg-yellow-500/20 flex-1"></div>
+                  <span className="text-[10px] font-bold text-slate-500 px-3 py-1 bg-white/5 border border-white/10 rounded-full uppercase tracking-wider font-sans">
+                    {isJediPassed ? `${yodaMissions.filter(m => isMissionCompleted(m.id)).length} / 2 Concluídas` : '🔒 Requer fase Jedi 100% concluída'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none font-sans">
+                  {yodaMissions.map((mission) => renderMissionCard(mission, !isJediPassed))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      ) : (
+        );
+      })() : (
         <div key={`mission-details-${selectedMission.id}`} className="space-y-12">
           <button
             onClick={() => setSelectedMission(null)}

@@ -31,6 +31,7 @@ export interface UserProfile {
   createdAt: any;
   surveyCompleted?: boolean;
   skillsSurvey?: Record<string, { current: number; target: number }>;
+  completedQuizzes?: string[];
 }
 
 export interface RankInfo {

@@ -44,10 +44,31 @@ service cloud.firestore {
              getUserRecord(request.auth.uid).get('isAdmin', false) == true;
     }
 
+    function isCompanyOwner(companyId) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/companies/$(companyId)) &&
+             get(/databases/$(database)/documents/companies/$(companyId)).data.get('ownerId', '') == request.auth.uid;
+    }
+
+    function isCompanyAdmin(companyId) {
+      return isSignedIn() && (
+        isGlobalAdmin() ||
+        isCompanyOwner(companyId) ||
+        (hasUserRecord(request.auth.uid) && 
+         getUserRecord(request.auth.uid).get('companyId', '') == companyId && 
+         getUserRecord(request.auth.uid).get('isAdmin', false) == true)
+      );
+    }
+
     // User Profile Rules with Strict Privilege Guardrails
     match /users/{userId} {
-      // Users can only read their own profile, unless they are a global admin
-      allow get: if isOwner(userId) || isGlobalAdmin();
+      // Users can only read their own profile, unless they are a global admin or in the same company
+      allow get: if isOwner(userId) || isGlobalAdmin() || (
+        isSignedIn() &&
+        hasUserRecord(request.auth.uid) &&
+        getUserRecord(request.auth.uid).get('companyId', '') != '' &&
+        getUserRecord(request.auth.uid).get('companyId', '') == resource.data.get('companyId', '')
+      );
       
       // Allow listing users matching company boundaries (Query Enforcer)
       allow list: if isSignedIn() && (
@@ -57,8 +78,8 @@ service cloud.firestore {
 
       // Creation: Only the user can create their own profile. Pre-allocate safe default privileges.
       allow create: if isOwner(userId) && isValidId(userId) &&
-                    request.resource.data.get('isAdmin', false) == false &&
-                    request.resource.data.get('role', 'user') == 'user';
+                     request.resource.data.get('isAdmin', false) == false &&
+                     request.resource.data.get('role', 'user') == 'user';
 
       // Update: User can update profile, but CANNOT self-elevate roles, permissions, or admin state
       allow update: if isGlobalAdmin() || (
@@ -84,16 +105,20 @@ service cloud.firestore {
       // Update/Delete: Only company owners or company/global admins can update or delete
       allow update, delete: if isSignedIn() && (
         isGlobalAdmin() ||
-        (resource.data.companyId == companyId)
+        isCompanyOwner(companyId)
       );
 
       // Company Whitelists Subcollection
       match /whitelist/{emailId} {
-        allow read: if isSignedIn() && isValidEmailId(emailId) && (
-          isGlobalAdmin() ||
-          (hasUserRecord(request.auth.uid) && getUserRecord(request.auth.uid).get('companyId', '') == companyId)
+        // Individual email lookup for registration matching
+        allow get: if isSignedIn() && isValidEmailId(emailId) && (
+          emailId == request.auth.token.email ||
+          isCompanyAdmin(companyId)
         );
-        allow write: if isGlobalAdmin() && isValidEmailId(emailId);
+        // Broad listing of whitelist emails
+        allow list: if isCompanyAdmin(companyId);
+        // Adding or removing emails from the whitelist
+        allow write: if isCompanyAdmin(companyId) && isValidEmailId(emailId);
       }
     }
   }

@@ -10,6 +10,7 @@ interface LevelSelectionViewProps {
   startLevel: (level: 'PADAWAN' | 'JEDI' | 'YODA') => void;
   setGameState: (state: GameState) => void;
   setActiveVideo: (video: { title: string; url: string } | null) => void;
+  completedQuizzes?: string[];
 }
 
 export const LevelSelectionView: React.FC<LevelSelectionViewProps> = ({
@@ -18,7 +19,19 @@ export const LevelSelectionView: React.FC<LevelSelectionViewProps> = ({
   startLevel,
   setGameState,
   setActiveVideo,
+  completedQuizzes = [],
 }) => {
+  const isLevelLocked = (level: 'PADAWAN' | 'JEDI' | 'YODA') => {
+    if (level === 'PADAWAN') return false;
+    if (level === 'JEDI') {
+      return !completedQuizzes.includes('PADAWAN');
+    }
+    if (level === 'YODA') {
+      return !completedQuizzes.includes('JEDI') || !completedQuizzes.includes('PADAWAN');
+    }
+    return false;
+  };
+
   return (
     <motion.div
       key="level-selection-section"
@@ -124,34 +137,60 @@ export const LevelSelectionView: React.FC<LevelSelectionViewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 select-none">
-        {(['PADAWAN', 'JEDI', 'YODA'] as const).map((level, lIdx) => (
-          <button
-            key={`lvl-sel-final-${level}-${lIdx}`}
-            onClick={() => startLevel(level)}
-            className="group relative flex flex-col items-center gap-6 p-10 rounded-[32px] bg-white/5 border border-white/10 hover:border-zello-orange/50 transition-all duration-500 overflow-hidden text-center cursor-pointer active:scale-98"
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-zello-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <div className="w-32 h-32 rounded-full border-4 border-zello-orange/20 p-2 overflow-hidden group-hover:scale-110 transition-transform bg-zello-black/40">
-              <img
-                src={RANKS[level].image}
-                alt={RANKS[level].name}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover rounded-full"
-              />
-            </div>
-            <div className="text-center relative z-10">
-              <h3 className={`text-2xl font-black uppercase italic transition-colors font-sans ${RANKS[level].color}`}>
-                {RANKS[level].name}
-              </h3>
-              <p className="text-sm text-slate-400 mt-2 font-medium leading-relaxed">
-                {RANKS[level].description}
-              </p>
-            </div>
-            <div className="mt-4 px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-zello-orange group-hover:border-zello-orange transition-colors font-sans">
-              Iniciar Quiz
-            </div>
-          </button>
-        ))}
+        {(['PADAWAN', 'JEDI', 'YODA'] as const).map((level, lIdx) => {
+          const locked = isLevelLocked(level);
+          return (
+            <button
+              key={`lvl-sel-final-${level}-${lIdx}`}
+              disabled={locked}
+              onClick={() => startLevel(level)}
+              className={`group relative flex flex-col items-center gap-6 p-10 rounded-[32px] border transition-all duration-500 overflow-hidden text-center ${
+                locked
+                  ? 'border-white/5 bg-white/2 opacity-40 cursor-not-allowed filter grayscale'
+                  : 'bg-white/5 border-white/10 hover:border-zello-orange/50 cursor-pointer active:scale-98'
+              }`}
+            >
+              {!locked && (
+                <div className="absolute inset-0 bg-gradient-to-b from-zello-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              )}
+              <div className={`w-32 h-32 rounded-full border-4 border-zello-orange/20 p-2 overflow-hidden bg-zello-black/40 ${!locked ? 'group-hover:scale-110' : ''} transition-transform`}>
+                <img
+                  src={RANKS[level].image}
+                  alt={RANKS[level].name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <div className="text-center relative z-10 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className={`text-2xl font-black uppercase italic transition-colors font-sans ${RANKS[level].color}`}>
+                    {RANKS[level].name}
+                  </h3>
+                  <p className="text-sm text-slate-400 mt-2 font-medium leading-relaxed">
+                    {RANKS[level].description}
+                  </p>
+                </div>
+                {locked && (
+                  <p className="text-xs font-bold text-zello-orange mt-4 flex items-center justify-center gap-1.5">
+                    <LucideIcons.Lock size={12} className="shrink-0" />
+                    <span>
+                      {level === 'JEDI'
+                        ? 'Requer 100% de acertos no Quiz Padawan'
+                        : 'Requer 100% de acertos no Quiz Jedi'}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div className={`mt-4 px-6 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest font-sans transition-colors ${
+                locked
+                  ? 'border-white/5 text-slate-600'
+                  : 'border-white/10 text-slate-500 group-hover:text-zello-orange group-hover:border-zello-orange'
+              }`}>
+                {locked ? 'Bloqueado' : 'Iniciar Quiz'}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex justify-center">

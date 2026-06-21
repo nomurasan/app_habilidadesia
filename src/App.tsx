@@ -61,6 +61,7 @@ interface UserProfile {
   createdAt: any;
   surveyCompleted?: boolean;
   skillsSurvey?: Record<string, { current: number; target: number }>;
+  completedQuizzes?: string[];
 }
 
 interface RankInfo {
@@ -116,6 +117,8 @@ export default function App() {
   const [isPresentingDeck, setIsPresentingDeck] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [completedMissions, setCompletedMissions] = useState<Record<string, boolean>>({});
+  const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
+  const [correctQuizAnswersCount, setCorrectQuizAnswersCount] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isSelectingForMission, setIsSelectingForMission] = useState(false);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -375,6 +378,7 @@ export default function App() {
           setUserProfile(data);
           setScore(data.xp || 0);
           setUnlockedPowers(data.unlockedPowers || []);
+          setCompletedQuizzes(data.completedQuizzes || []);
           
           // Load mission progress
           if (data.missionProgress) {
@@ -745,6 +749,7 @@ export default function App() {
     setLevelChallenges(selected);
     setSelectedLevel(level);
     setCurrentChallengeIndex(0);
+    setCorrectQuizAnswersCount(0); // Reset correct answers counter
     setTimeLeft(60);
     setIsActive(true);
     setIsAnswered(false);
@@ -814,6 +819,7 @@ export default function App() {
     let newUnlockedList = [...unlockedPowers];
 
     if (isCorrect) {
+      setCorrectQuizAnswersCount(prev => prev + 1);
       // Points calculation: Base 1000 + Time Bonus (up to 500)
       const timeBonus = Math.floor((timeLeft / 60) * 500);
       const pointsEarned = 1000 + timeBonus;
@@ -857,6 +863,25 @@ export default function App() {
       setTimeLeft(60);
       setIsActive(true);
     } else {
+      // Save 100% correctness results to unlock progression levels
+      const totalCorrect = correctQuizAnswersCount;
+      const totalQuestions = levelChallenges.length;
+      
+      if (totalCorrect === totalQuestions && totalQuestions > 0 && selectedLevel) {
+        if (!completedQuizzes.includes(selectedLevel)) {
+          const updatedQuizzes = [...completedQuizzes, selectedLevel];
+          setCompletedQuizzes(updatedQuizzes);
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+              completedQuizzes: updatedQuizzes,
+              lastActive: serverTimestamp()
+            });
+          } catch (err) {
+            handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+          }
+        }
+      }
       setGameState('results');
     }
   };
@@ -1639,6 +1664,7 @@ export default function App() {
               setGameState={setGameState}
               setActiveVideo={setActiveVideo}
               startLevel={startLevel}
+              completedQuizzes={completedQuizzes}
             />
           )}
 
