@@ -326,6 +326,14 @@ export default function App() {
     return () => unsubscribe();
   }, [gameState]);
 
+  // Protect Admin state - redirect non-admins to home view immediately
+  useEffect(() => {
+    if (gameState === 'admin' && userProfile && !userProfile.isAdmin) {
+      console.log("Protecting admin view: redirecting non-admin to home.");
+      setGameState('home');
+    }
+  }, [gameState, userProfile]);
+
   // Sync Company Users
   useEffect(() => {
     if (!user || !userProfile?.companyId || !userProfile?.surveyCompleted) {
@@ -730,7 +738,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         companyId: cid,
-        isAdmin: true
+        isAdmin: false
       });
 
       setAdminShowAllCompanies(false);
