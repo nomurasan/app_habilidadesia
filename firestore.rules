@@ -73,7 +73,7 @@ service cloud.firestore {
       // Allow listing users matching company boundaries (Query Enforcer)
       allow list: if isSignedIn() && (
         isGlobalAdmin() || 
-        (resource.data.companyId == getUserRecord(request.auth.uid).get('companyId', ''))
+        (hasUserRecord(request.auth.uid) && resource.data.companyId == getUserRecord(request.auth.uid).get('companyId', ''))
       );
 
       // Creation: Only the user can create their own profile. Pre-allocate safe default privileges.
@@ -86,8 +86,7 @@ service cloud.firestore {
         isOwner(userId) &&
         fieldHasNotChanged('isAdmin') &&
         fieldHasNotChanged('role') &&
-        fieldHasNotChanged('permissions') &&
-        fieldHasNotChanged('companyId')
+        fieldHasNotChanged('permissions')
       );
 
       // Deletion: Strictly administrators only
@@ -99,8 +98,8 @@ service cloud.firestore {
       // Get/List: Any signed-in user can retrieve or list companies (necessary for onboarding and group lists)
       allow read: if isSignedIn();
 
-      // Create: Any signed-in user can register/create a company
-      allow create: if isSignedIn() && isValidId(companyId);
+      // Create: Only administrators can register/create a company
+      allow create: if isGlobalAdmin() && isValidId(companyId);
 
       // Update/Delete: Only company owners or company/global admins can update or delete
       allow update, delete: if isSignedIn() && (

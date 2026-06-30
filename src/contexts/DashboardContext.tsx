@@ -34,7 +34,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   } = useAIReport();
 
   useEffect(() => {
-    if (!userProfile?.companyId) {
+    if (!user || !userProfile?.companyId || !userProfile?.surveyCompleted) {
       setTeamStats(null);
       setCompanyUsersList([]);
       return;

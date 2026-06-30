@@ -22,10 +22,11 @@ interface Company {
 interface OnboardingScreenProps {
   user: any;
   availableCompanies: Company[];
-  onComplete: (companyId: string, skillsSurvey: Record<string, { current: number; target: number }>) => void;
+  onComplete: (companyId: string, skillsSurvey: Record<string, { current: number; target: number }>) => void | Promise<void>;
   initialCompanyId?: string;
   initialSkillsSurvey?: Record<string, { current: number; target: number }>;
   isEditMode?: boolean;
+  isAdmin?: boolean;
 }
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ 
@@ -33,7 +34,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   availableCompanies, 
   onComplete,
   initialCompanyId = '',
-  isEditMode = false
+  isEditMode = false,
+  isAdmin = false
 }) => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>(initialCompanyId || '');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -66,6 +68,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
       // Create new company if requested
       if (isCreatingNew) {
+        if (!isAdmin) {
+          throw new Error('Apenas administradores podem registrar novas empresas.');
+        }
         const companyRef = doc(collection(db, 'companies'));
         finalCompanyId = companyRef.id;
         await setDoc(companyRef, {
@@ -80,7 +85,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         throw new Error('Identificação de empresa ou turma inválida.');
       }
 
-      onComplete(finalCompanyId, {});
+      await onComplete(finalCompanyId, {});
     } catch (err: any) {
       console.error("Failed completing onboarding:", err);
       setErrorMessage('Ocorreu um erro ao salvar suas informações de perfil: ' + (err?.message || err));
@@ -169,62 +174,70 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                 </div>
 
                 <div className="flex items-center gap-4 py-2">
-                  <div className="h-px flex-1 bg-white/10"></div>
-                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">ou</span>
-                  <div className="h-px flex-1 bg-white/10"></div>
-                </div>
+                   <div className="h-px flex-1 bg-white/10"></div>
+                   <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">ou</span>
+                   <div className="h-px flex-1 bg-white/10"></div>
+                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCreatingNew(true);
-                    setErrorMessage('');
-                  }}
-                  className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-zello-orange/30 text-white font-black uppercase tracking-wider text-xs transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus size={16} />
-                  Nova Organização / Turma Não Listada
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-zello-orange uppercase tracking-[0.2em] px-1">Nome da Nova Turma ou Empresa</label>
-                  <input 
-                    type="text"
-                    value={newCompanyName}
-                    onChange={(e) => {
-                      setNewCompanyName(e.target.value);
-                      setErrorMessage('');
-                    }}
-                    placeholder="Ex: Minha Empresa Corp"
-                    className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600"
-                    autoFocus
-                  />
-                </div>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setIsCreatingNew(true);
+                     setErrorMessage('');
+                   }}
+                   className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-zello-orange/30 text-white font-black uppercase tracking-wider text-xs transition-all flex items-center justify-center gap-2"
+                 >
+                   <Plus size={16} />
+                   Nova Organização / Turma Não Listada
+                 </button>
+               </div>
+             ) : (
+               <div className="space-y-5">
+                 <div className="space-y-2">
+                   <label className="text-xs font-black text-zello-orange uppercase tracking-[0.2em] px-1">Nome da Nova Turma ou Empresa</label>
+                   <input 
+                     type="text"
+                     value={newCompanyName}
+                     onChange={(e) => {
+                       setNewCompanyName(e.target.value);
+                       setErrorMessage('');
+                     }}
+                     placeholder={isAdmin ? "Ex: Minha Empresa Corp" : "Apenas administradores podem cadastrar"}
+                     className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                     autoFocus
+                     disabled={!isAdmin}
+                   />
+                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCreatingNew(false);
-                    setNewCompanyName('');
-                    setErrorMessage('');
-                  }}
-                  className="text-xs font-bold text-slate-400 hover:text-white transition-all underline"
-                >
-                  Voltar para a seleção de turmas existentes
-                </button>
-              </div>
-            )}
-          </div>
+                 {!isAdmin && (
+                   <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl flex items-center gap-3">
+                     <AlertCircle size={16} className="shrink-0" />
+                     <span>Atenção: O cadastramento de novas empresas é permitido apenas para usuários administradores (ADMIN).</span>
+                   </div>
+                 )}
 
-          <div className="pt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={handleFinishOnboarding}
-              disabled={savingLoading}
-              className="px-8 py-5 bg-zello-orange text-white font-black uppercase tracking-[0.15em] text-sm rounded-2xl hover:brightness-110 disabled:opacity-50 active:scale-95 transition-all shadow-[0_0_35px_rgba(240,90,40,0.25)] flex items-center gap-2"
-            >
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setIsCreatingNew(false);
+                     setNewCompanyName('');
+                     setErrorMessage('');
+                   }}
+                   className="text-xs font-bold text-slate-400 hover:text-white transition-all underline"
+                 >
+                   Voltar para a seleção de turmas existentes
+                 </button>
+               </div>
+             )}
+           </div>
+
+           <div className="pt-4 flex justify-end">
+             <button
+               type="button"
+               onClick={handleFinishOnboarding}
+               disabled={savingLoading || (isCreatingNew && !isAdmin)}
+               className="px-8 py-5 bg-zello-orange text-white font-black uppercase tracking-[0.15em] text-sm rounded-2xl hover:brightness-110 disabled:opacity-50 active:scale-95 transition-all shadow-[0_0_35px_rgba(240,90,40,0.25)] flex items-center gap-2"
+             >
               {savingLoading ? (
                 'Processando...'
               ) : (

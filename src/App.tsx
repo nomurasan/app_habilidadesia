@@ -291,13 +291,16 @@ export default function App() {
 
   // Sync Current Company Whitelist
   useEffect(() => {
-    if (!userProfile?.companyId || !userProfile.isAdmin) return;
+    if (!user || !userProfile?.companyId || !userProfile?.isAdmin || !userProfile?.surveyCompleted) {
+      setWhitelist([]);
+      return;
+    }
     const q = collection(db, 'companies', userProfile.companyId, 'whitelist');
     const unsubscribe = onSnapshot(q, (snap) => {
       setWhitelist(snap.docs.map(doc => doc.id));
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'whitelist'));
     return () => unsubscribe();
-  }, [userProfile?.companyId, userProfile?.isAdmin]);
+  }, [user, userProfile?.companyId, userProfile?.isAdmin, userProfile?.surveyCompleted]);
 
   // Sync All Users (Global List for admin)
   useEffect(() => {
@@ -323,7 +326,10 @@ export default function App() {
 
   // Sync Company Users
   useEffect(() => {
-    if (!userProfile?.companyId) return;
+    if (!user || !userProfile?.companyId || !userProfile?.surveyCompleted) {
+      setCompanyUsers([]);
+      return;
+    }
     const q = query(collection(db, 'users'), where('companyId', '==', userProfile.companyId));
     const unsubscribe = onSnapshot(q, (snap) => {
       const users = snap.docs.map(doc => ({
@@ -335,10 +341,17 @@ export default function App() {
       setCompanyUsers(uniqueUsers);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'users'));
     return () => unsubscribe();
-  }, [userProfile?.companyId]);
+  }, [user, userProfile?.companyId, userProfile?.surveyCompleted]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setUserProfile(null);
+      setScore(0);
+      setUnlockedPowers([]);
+      setCompletedQuizzes([]);
+      setCompletedMissions({});
+      return;
+    }
 
     let isSubscribed = true;
     const userDocRef = doc(db, 'users', user.uid);
@@ -943,6 +956,7 @@ export default function App() {
         user={user}
         availableCompanies={availableCompanies}
         initialCompanyId={(userProfile.companyId && userProfile.companyId !== 'null' && userProfile.companyId !== 'undefined') ? userProfile.companyId : ''}
+        isAdmin={!!userProfile?.isAdmin}
         onComplete={async (companyId, skillsSurvey) => {
           if (!companyId || companyId === 'null' || companyId === 'undefined') {
             console.error("onComplete called with invalid companyId:", companyId);
@@ -1622,6 +1636,7 @@ export default function App() {
                   isEditMode={true}
                   initialCompanyId={(userProfile?.companyId && userProfile.companyId !== 'null' && userProfile.companyId !== 'undefined') ? userProfile.companyId : ''}
                   initialSkillsSurvey={userProfile?.skillsSurvey}
+                  isAdmin={!!userProfile?.isAdmin}
                   onComplete={async (companyId, skillsSurvey) => {
                     if (!companyId || companyId === 'null' || companyId === 'undefined') {
                       console.error("onComplete called with invalid companyId in profile edit:", companyId);
