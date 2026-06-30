@@ -50,7 +50,7 @@ export const AI_POWERS: AIPower[] = [
       'Melhor equilíbrio entre foco e reuniões.'
     ],
     icon: 'Calendar',
-    image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/calendar/1200/800',
     
     // Legacy maps
     shortDescription: 'Auxiliar o usuário na organização inteligente de compromissos.',
@@ -61,7 +61,7 @@ export const AI_POWERS: AIPower[] = [
     id: '2',
     category: 'Produtividade Pessoal',
     title: 'Planejar Semana',
-    objective: 'Construir um planejamento semanal estruturado baseado em objetivos, prioridades e disponibilidade do usuário.',
+    objective: 'Construir um planejamento semanal estruturado baseado em objetivos, prioridades and disponibilidade do usuário.',
     applicationContext: 'Ideal para profissionais que desejam iniciar a semana com clareza sobre entregas e prioridades.',
     practicalExample: 'O usuário informa que deseja finalizar um projeto, estudar IA e praticar exercícios físicos. A IA gera uma agenda semanal equilibrada considerando todos esses objetivos.',
     expectedBenefits: [
@@ -72,7 +72,7 @@ export const AI_POWERS: AIPower[] = [
       'Acompanhamento das metas.'
     ],
     icon: 'Clock',
-    image: 'https://images.unsplash.com/photo-1512418490979-92798cec1380?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/planning/1200/800',
     
     // Legacy maps
     shortDescription: 'Construir um planejamento semanal estruturado baseado em objetivos.',
@@ -94,7 +94,7 @@ export const AI_POWERS: AIPower[] = [
       'Aumento da efetividade operacional.'
     ],
     icon: 'CheckSquare',
-    image: 'https://images.unsplash.com/photo-1484417894907-623942c8ea29?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/tasks/1200/800',
     
     // Legacy maps
     shortDescription: 'Apoiar na definição da ordem ideal de execução das tarefas.',
@@ -118,7 +118,7 @@ export const AI_POWERS: AIPower[] = [
       'Melhor imagem profissional.'
     ],
     icon: 'Mail',
-    image: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/emails/1200/800',
     
     // Legacy maps
     shortDescription: 'Produzir mensagens profissionais claras, objetivas e adaptadas.',
@@ -140,7 +140,7 @@ export const AI_POWERS: AIPower[] = [
       'Redução de ruídos de comunicação.'
     ],
     icon: 'Megaphone',
-    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/announcement/1200/800',
     
     // Legacy maps
     shortDescription: 'Elaborar comunicados internos ou externos estruturados.',
@@ -162,7 +162,7 @@ export const AI_POWERS: AIPower[] = [
       'Apoio à tomada de decisão.'
     ],
     icon: 'FileText',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/document/1200/800',
     
     // Legacy maps
     shortDescription: 'Transformar documentos extensos em versões resumidas.',
@@ -186,7 +186,7 @@ export const AI_POWERS: AIPower[] = [
       'Apoio à pesquisa científica.'
     ],
     icon: 'Search',
-    image: 'https://images.unsplash.com/photo-1507537297725-24a1c029fa3c?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/research/1200/800',
     
     // Legacy maps
     shortDescription: 'Realizar pesquisas estruturadas utilizando múltiplas fontes.',
@@ -208,7 +208,7 @@ export const AI_POWERS: AIPower[] = [
       'Apoio ao desenvolvimento profissional.'
     ],
     icon: 'BookOpen',
-    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/learning/1200/800',
     
     // Legacy maps
     shortDescription: 'Facilitar o aprendizado estruturado de assuntos desconhecidos.',
@@ -230,7 +230,7 @@ export const AI_POWERS: AIPower[] = [
       'Melhor qualidade das análises.'
     ],
     icon: 'FileSearch',
-    image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/curator/1200/800',
     
     // Legacy maps
     shortDescription: 'Selecionar, organizar e filtrar informações relevantes.',
@@ -254,12 +254,12 @@ export const AI_POWERS: AIPower[] = [
       'Maior segurança na decisão.'
     ],
     icon: 'Brain',
-    image: 'https://images.unsplash.com/photo-1543286386-7a39e2d90bcc?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/scenarios/1200/800',
     
     // Legacy maps
     shortDescription: 'Avaliar diferentes possibilidades futuras considerando riscos.',
     fullDescription: 'Avaliar diferentes possibilidades futuras considerando riscos, oportunidades e impactos.',
-    cases: ['Mapeamento estratégico executivo', 'Contenção de despesas operacionais', 'Otimização de rotas logísticas']
+    cases: ['Mapeamento strategic executivo', 'Contenção de despesas operacionais', 'Otimização de rotas logísticas']
   },
   {
     id: '11',
@@ -276,7 +276,7 @@ export const AI_POWERS: AIPower[] = [
       'Melhor qualidade das decisões.'
     ],
     icon: 'Sparkles',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/creativity/1200/800',
     
     // Legacy maps
     shortDescription: 'Criar soluções alternativas para um problema quando tradicional falha.',
@@ -300,7 +300,7 @@ export const AI_POWERS: AIPower[] = [
       'Uso ético da tecnologia.'
     ],
     icon: 'Shield',
-    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://picsum.photos/seed/cybersecurity/1200/800',
     
     // Legacy maps
     shortDescription: 'Orientar o uso responsável da Inteligência Artificial.',

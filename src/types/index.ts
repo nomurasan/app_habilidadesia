@@ -16,6 +16,7 @@ export interface Company {
   createdAt: any;
   logoUrl?: string;
   domain?: string;
+  accessCode?: string;
 }
 
 export interface UserProfile {

@@ -17,6 +17,7 @@ interface Company {
   name: string;
   ownerId?: string;
   createdAt: any;
+  accessCode?: string;
 }
 
 interface OnboardingScreenProps {
@@ -27,6 +28,7 @@ interface OnboardingScreenProps {
   initialSkillsSurvey?: Record<string, { current: number; target: number }>;
   isEditMode?: boolean;
   isAdmin?: boolean;
+  onCancel?: () => void;
 }
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ 
@@ -35,11 +37,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   onComplete,
   initialCompanyId = '',
   isEditMode = false,
-  isAdmin = false
+  isAdmin = false,
+  onCancel
 }) => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>(initialCompanyId || '');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
+  const [newCompanyAccessCode, setNewCompanyAccessCode] = useState('');
+  const [enteredAccessCode, setEnteredAccessCode] = useState('');
   const [savingLoading, setSavingLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -60,6 +65,25 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       setErrorMessage('Por favor, digite o nome da nova empresa.');
       return;
     }
+    if (isCreatingNew && !newCompanyAccessCode.trim()) {
+      setErrorMessage('Por favor, informe o código de acesso alfanumérica para a nova empresa.');
+      return;
+    }
+
+    // Verify existing company access code
+    if (!isCreatingNew) {
+      const selectedCompany = availableCompanies.find(c => c.id === selectedCompanyId);
+      if (selectedCompany && selectedCompany.accessCode) {
+        if (!enteredAccessCode.trim()) {
+          setErrorMessage('Por favor, digite o código de acesso desta empresa/turma.');
+          return;
+        }
+        if (enteredAccessCode.trim().toUpperCase() !== selectedCompany.accessCode.trim().toUpperCase()) {
+          setErrorMessage('Código de acesso incorreto para a empresa selecionada. Por favor, verifique com seu administrador.');
+          return;
+        }
+      }
+    }
 
     setSavingLoading(true);
     setErrorMessage('');
@@ -73,9 +97,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         }
         const companyRef = doc(collection(db, 'companies'));
         finalCompanyId = companyRef.id;
+        
+        const cleanAccessCode = newCompanyAccessCode.trim().replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        
         await setDoc(companyRef, {
           id: finalCompanyId,
           name: newCompanyName.trim(),
+          accessCode: cleanAccessCode,
           ownerId: user.uid,
           createdAt: serverTimestamp()
         });
@@ -157,6 +185,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       onChange={(e) => {
                         setSelectedCompanyId(e.target.value);
                         setErrorMessage('');
+                        setEnteredAccessCode('');
                       }}
                       className="w-full bg-slate-900 border-2 border-white/10 rounded-2xl p-5 pr-10 text-white font-bold text-base focus:border-zello-orange focus:bg-slate-900 outline-none transition-all appearance-none cursor-pointer"
                     >
@@ -173,24 +202,29 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 py-2">
-                   <div className="h-px flex-1 bg-white/10"></div>
-                   <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">ou</span>
-                   <div className="h-px flex-1 bg-white/10"></div>
-                 </div>
-
-                 <button
-                   type="button"
-                   onClick={() => {
-                     setIsCreatingNew(true);
-                     setErrorMessage('');
-                   }}
-                   className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-zello-orange/30 text-white font-black uppercase tracking-wider text-xs transition-all flex items-center justify-center gap-2"
-                 >
-                   <Plus size={16} />
-                   Nova Organização / Turma Não Listada
-                 </button>
-               </div>
+                {selectedCompanyId && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="space-y-2 pt-2"
+                  >
+                    <label className="text-xs font-black text-zello-orange uppercase tracking-[0.2em] px-1">Código de Acesso Alfanumérico</label>
+                    <input 
+                      type="text"
+                      value={enteredAccessCode}
+                      onChange={(e) => {
+                        setEnteredAccessCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase());
+                        setErrorMessage('');
+                      }}
+                      placeholder="Digite o código de acesso para esta turma"
+                      className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600 font-mono tracking-wider"
+                    />
+                    <p className="text-[11px] text-slate-500 font-medium px-1">
+                      Peça este código ao administrador da sua empresa ou turma para se vincular.
+                    </p>
+                  </motion.div>
+                )}
+              </div>
              ) : (
                <div className="space-y-5">
                  <div className="space-y-2">
@@ -203,11 +237,31 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                        setErrorMessage('');
                      }}
                      placeholder={isAdmin ? "Ex: Minha Empresa Corp" : "Apenas administradores podem cadastrar"}
-                     className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                     autoFocus
-                     disabled={!isAdmin}
-                   />
-                 </div>
+                    className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    autoFocus
+                    disabled={!isAdmin}
+                  />
+                </div>
+
+                {isAdmin && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-zello-orange uppercase tracking-[0.2em] px-1">Código de Acesso Alfanumérico da Nova Empresa</label>
+                    <input 
+                      type="text"
+                      value={newCompanyAccessCode}
+                      onChange={(e) => {
+                        setNewCompanyAccessCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase());
+                        setErrorMessage('');
+                      }}
+                      placeholder="Ex: ACME123"
+                      className="w-full bg-slate-900 border-2 border-white/10 focus:border-zello-orange rounded-2xl p-5 text-white font-bold text-base outline-none transition-all placeholder:text-slate-600 font-mono tracking-wider"
+                    />
+                    <p className="text-[11px] text-slate-500 font-medium px-1">
+                      Os participantes deverão informar este código de acesso ao tentarem entrar nesta turma.
+                    </p>
+                  </div>
+                )}
+
 
                  {!isAdmin && (
                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl flex items-center gap-3">
@@ -231,23 +285,36 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
              )}
            </div>
 
-           <div className="pt-4 flex justify-end">
-             <button
-               type="button"
-               onClick={handleFinishOnboarding}
-               disabled={savingLoading || (isCreatingNew && !isAdmin)}
-               className="px-8 py-5 bg-zello-orange text-white font-black uppercase tracking-[0.15em] text-sm rounded-2xl hover:brightness-110 disabled:opacity-50 active:scale-95 transition-all shadow-[0_0_35px_rgba(240,90,40,0.25)] flex items-center gap-2"
-             >
-              {savingLoading ? (
-                'Processando...'
+                       <div className="pt-4 flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
+              {onCancel ? (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="w-full sm:w-auto px-8 py-5 bg-white/5 hover:bg-white/10 text-slate-300 font-black uppercase tracking-[0.15em] text-sm rounded-2xl transition-all border border-white/10 flex items-center justify-center gap-2"
+                >
+                  Cancelar
+                </button>
               ) : (
-                <>
-                  {isEditMode ? 'Salvar Configurações' : 'Concluir Cadastro'}
-                  <Check size={16} />
-                </>
+                <div></div>
               )}
-            </button>
-          </div>
+              <div className="w-full sm:w-auto flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleFinishOnboarding}
+                  disabled={savingLoading || (isCreatingNew && !isAdmin)}
+                  className="w-full sm:w-auto px-8 py-5 bg-zello-orange text-white font-black uppercase tracking-[0.15em] text-sm rounded-2xl hover:brightness-110 disabled:opacity-50 active:scale-95 transition-all shadow-[0_0_35px_rgba(240,90,40,0.25)] flex items-center justify-center gap-2"
+                >
+                  {savingLoading ? (
+                    'Processando...'
+                  ) : (
+                    <>
+                      {isEditMode ? 'Salvar Configurações' : 'Concluir Cadastro'}
+                      <Check size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
         </motion.div>
       </div>
     </div>

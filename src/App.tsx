@@ -46,6 +46,7 @@ interface Company {
   name: string;
   ownerId?: string;
   createdAt: any;
+  accessCode?: string;
 }
 
 interface UserProfile {
@@ -132,6 +133,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isRegisteringCompany, setIsRegisteringCompany] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
+  const [newCompanyAccessCode, setNewCompanyAccessCode] = useState('');
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [companyIdToJoin, setCompanyIdToJoin] = useState('');
@@ -462,15 +464,22 @@ export default function App() {
 
   const handleCreateCompany = async () => {
     if (!newCompanyName.trim() || !user) return;
+    if (!newCompanyAccessCode.trim()) {
+      triggerAlert('Por favor, informe um código de acesso alfanumérico para a nova organização.', 'Aviso', 'info');
+      return;
+    }
     setIsRegisteringCompany(true);
     try {
       // Use Firestore auto-generated ID for better compatibility
       const companyRef = doc(collection(db, 'companies'));
       const companyId = companyRef.id;
       
+      const cleanAccessCode = newCompanyAccessCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      
       await setDoc(companyRef, {
         id: companyId,
         name: newCompanyName.trim(),
+        accessCode: cleanAccessCode,
         ownerId: user.uid,
         createdAt: serverTimestamp()
       });
@@ -487,10 +496,11 @@ export default function App() {
       });
 
       setNewCompanyName('');
+      setNewCompanyAccessCode('');
       setIsCreatingNewCompany(false);
       setAdminShowAllCompanies(false);
       
-      triggerAlert(`Organização "${newCompanyName}" registrada com sucesso!\n\nSelecione a turma para começar.`, 'Sucesso', 'success');
+      triggerAlert(`Organização "${newCompanyName}" registrada com sucesso com o código "${cleanAccessCode}"!\n\nSelecione a turma para começar.`, 'Sucesso', 'success');
     } catch (error: any) {
       console.error('Error creating company:', error);
       const errorMessage = error?.message || 'Erro desconhecido';
@@ -504,8 +514,11 @@ export default function App() {
     if (!editingCompany || !editingCompany.name.trim()) return;
     try {
       const companyRef = doc(db, 'companies', editingCompany.id);
+      const cleanAccessCode = (editingCompany.accessCode || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      
       await updateDoc(companyRef, {
-        name: editingCompany.name
+        name: editingCompany.name,
+        accessCode: cleanAccessCode
       });
       setEditingCompany(null);
       triggerAlert('Empresa atualizada com sucesso!', 'Sucesso', 'success');
@@ -957,6 +970,7 @@ export default function App() {
         availableCompanies={availableCompanies}
         initialCompanyId={(userProfile.companyId && userProfile.companyId !== 'null' && userProfile.companyId !== 'undefined') ? userProfile.companyId : ''}
         isAdmin={!!userProfile?.isAdmin}
+        onCancel={() => signOut(auth)}
         onComplete={async (companyId, skillsSurvey) => {
           if (!companyId || companyId === 'null' || companyId === 'undefined') {
             console.error("onComplete called with invalid companyId:", companyId);
@@ -1052,10 +1066,9 @@ export default function App() {
                 </div>
               </div>
 
-              {(!userProfile?.companyId || adminShowAllCompanies) ? (
-                <div key="company-setup-manager-v2" className="space-y-8">
-                  {isCreatingNewCompany || editingCompany ? (
-                    <div className="max-w-xl mx-auto p-10 bg-white/5 border border-zello-orange/30 rounded-[40px] space-y-8 text-left shadow-[0_0_50px_rgba(240,90,40,0.1)] relative overflow-hidden">
+              {isCreatingNewCompany || editingCompany ? (
+                <div key="company-form-block-active" className="space-y-8">
+                  <div className="max-w-xl mx-auto p-10 bg-white/5 border border-zello-orange/30 rounded-[40px] space-y-8 text-left shadow-[0_0_50px_rgba(240,90,40,0.1)] relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zello-orange to-transparent"></div>
                       <div className="flex items-center justify-between">
                         <h3 className="text-2xl font-black text-white uppercase italic tracking-tight">
@@ -1081,6 +1094,28 @@ export default function App() {
                             className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder:text-slate-600 focus:border-zello-orange focus:bg-white/10 outline-none transition-all"
                           />
                         </div>
+
+                        <div className="space-y-3">
+                          <label className="text-xs font-black text-zello-orange uppercase tracking-[.2em] px-1">Código de Acesso Alfanumérico</label>
+                          <input 
+                            type="text" 
+                            value={editingCompany ? (editingCompany.accessCode || '') : newCompanyAccessCode}
+                            onChange={(e) => {
+                              const cleanVal = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                              if (editingCompany) {
+                                setEditingCompany({...editingCompany, accessCode: cleanVal});
+                              } else {
+                                setNewCompanyAccessCode(cleanVal);
+                              }
+                            }}
+                            placeholder="Ex: ACME123"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder:text-slate-600 focus:border-zello-orange focus:bg-white/10 outline-none transition-all font-mono tracking-wider"
+                          />
+                          <p className="text-[11px] text-slate-500 font-medium px-1">
+                            Este código alfanumérico será exigido dos participantes ao se vincularem à empresa ou turma pela primeira vez.
+                          </p>
+                        </div>
+
                         <p className="text-xs text-slate-500 font-medium px-1">
                           {editingCompany ? 'As alterações serão aplicadas a todos os membros vinculados.' : 'Ao criar uma nova empresa, você será automaticamente definido como administrador dela.'}
                         </p>
@@ -1089,7 +1124,7 @@ export default function App() {
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <button
                           onClick={editingCompany ? handleUpdateCompany : handleCreateCompany}
-                          disabled={isRegisteringCompany || (editingCompany ? !editingCompany.name.trim() : !newCompanyName.trim())}
+                          disabled={isRegisteringCompany || (editingCompany ? (!editingCompany.name.trim() || !(editingCompany.accessCode || '').trim()) : (!newCompanyName.trim() || !newCompanyAccessCode.trim()))}
                           className="flex-1 py-5 bg-zello-orange text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:brightness-110 shadow-[0_0_30px_rgba(240,90,40,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {isRegisteringCompany ? <LucideIcons.Loader2 className="animate-spin" size={20} /> : (editingCompany ? 'Salvar Alterações' : 'Concluir Cadastro')}
@@ -1102,8 +1137,10 @@ export default function App() {
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-8">
+                  </div>
+              ) : (!userProfile?.companyId || adminShowAllCompanies) ? (
+                <div key="company-setup-manager-v2" className="space-y-8">
+                  <div className="space-y-8">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 p-6 rounded-[32px] border border-white/10">
                         <div className="space-y-1">
                           <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">Empresas & Turmas</h2>
@@ -1153,8 +1190,13 @@ export default function App() {
                                 
                                 <div className="space-y-2">
                                   <h3 className="text-2xl font-black text-white italic uppercase tracking-tight group-hover:text-zello-orange transition-colors">{comp.name}</h3>
-                                  <div className="flex items-center gap-3">
-                                    <code className="text-[10px] bg-zello-orange/10 px-3 py-1 rounded-full text-zello-orange font-bold font-mono tracking-widest">{comp.id}</code>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <code className="text-[10px] bg-white/5 px-3 py-1 rounded-full text-slate-400 font-bold font-mono tracking-widest" title="ID da Empresa">{comp.id}</code>
+                                    {comp.accessCode ? (
+                                      <code className="text-[10px] bg-zello-orange/10 px-3 py-1 rounded-full text-zello-orange font-bold font-mono tracking-widest" title="Código de Acesso">CÓDIGO: {comp.accessCode}</code>
+                                    ) : (
+                                      <code className="text-[10px] bg-red-500/10 px-3 py-1 rounded-full text-red-400 font-bold font-mono tracking-widest" title="Código de Acesso Ausente">CÓDIGO: NÃO DEFINIDO</code>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -1305,8 +1347,7 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
               ) : (
                 <div key={`admin-management-panel-final-${userProfile.companyId}`} className="space-y-10">
                   {/* Company Info Header */}
@@ -1323,27 +1364,45 @@ export default function App() {
                             {userProfile?.isAdmin ? 'Administrador' : 'Observador'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">IDENTIFICADOR: {userProfile?.companyId}</span>
                           <div className="w-1 h-1 rounded-full bg-slate-700"></div>
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">{companyUsers.length} Participantes</span>
+                          {currentCompany?.accessCode && (
+                            <>
+                              <div className="w-1 h-1 rounded-full bg-slate-700"></div>
+                              <span className="text-xs font-black text-zello-orange uppercase tracking-[0.2em]">CÓDIGO DE ACESSO: {currentCompany.accessCode}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
                     
-                    <button 
-                      onClick={async () => {
-                        if (confirm("Tem certeza que deseja sair desta empresa? Seus dados de XP serão mantidos, mas você perderá o vínculo com a turma.")) {
-                          await updateDoc(doc(db, 'users', user?.uid!), {
-                            companyId: null,
-                            isAdmin: false
-                          });
-                        }
-                      }}
-                      className="px-6 py-3 bg-red-500/5 hover:bg-red-500 border border-red-500/20 text-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative z-10"
-                    >
-                      Desvincular da Turma
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 relative z-10">
+                      {userProfile?.isAdmin && (
+                        <button
+                          onClick={() => setEditingCompany(currentCompany)}
+                          className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <LucideIcons.Settings size={14} className="text-zello-orange" />
+                          Editar Dados da Empresa
+                        </button>
+                      )}
+                      
+                      <button 
+                        onClick={async () => {
+                          if (confirm("Tem certeza que deseja sair desta empresa? Seus dados de XP serão mantidos, mas você perderá o vínculo com a turma.")) {
+                            await updateDoc(doc(db, 'users', user?.uid!), {
+                              companyId: null,
+                              isAdmin: false
+                            });
+                          }
+                        }}
+                        className="px-6 py-3 bg-red-500/5 hover:bg-red-500 border border-red-500/20 text-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative z-10"
+                      >
+                        Desvincular da Turma
+                      </button>
+                    </div>
                     
                     <LucideIcons.ShieldCheck className="absolute -bottom-10 -right-10 text-white opacity-[0.02]" size={280} />
                   </div>
@@ -1472,85 +1531,68 @@ export default function App() {
                           </div>
                         </div>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left">
+                          <table className="w-full text-left table-auto">
                             <thead className="bg-white/5">
                               <tr key="company-users-header-row">
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Colaborador</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">XP</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Nível</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Poderes</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Missão</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Última Atividade</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Papel</th>
-                                {userProfile.isAdmin && <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Controles</th>}
+                                <th className="p-4 sm:p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Colaborador</th>
+                                <th className="p-4 sm:p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Progresso</th>
+                                {userProfile.isAdmin && <th className="p-4 sm:p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Controles</th>}
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
                               {companyUsers.map((u, idx) => (
                                 <tr key={`company-user-row-mng-v6-${u.userId || 'u'}-${u.email || 'e'}-${idx}-${companyUsers.length}`} className="hover:bg-white/5 transition-colors group/row">
-                                  <td className="p-6">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-full bg-zello-orange/10 flex items-center justify-center text-zello-orange font-black text-sm">
+                                  <td className="p-4 sm:p-6">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zello-orange/10 flex items-center justify-center text-zello-orange font-black text-xs sm:text-sm shrink-0">
                                         {u.email?.[0].toUpperCase() || '?'}
                                       </div>
-                                      <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-white group-hover/row:text-zello-orange transition-colors">{u.email}</span>
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono">UID: {u.userId.slice(0, 8)}...</span>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <span className="text-xs sm:text-sm font-bold text-white group-hover/row:text-zello-orange transition-colors truncate max-w-[120px] sm:max-w-[220px]">{u.email}</span>
+                                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${u.isAdmin ? 'bg-zello-orange/20 text-zello-orange border border-zello-orange/30' : 'bg-slate-800 text-slate-400 border border-white/5'}`}>
+                                            {u.isAdmin ? 'ADMIN' : 'USER'}
+                                          </span>
+                                        </div>
+                                        <span className="text-[9px] text-slate-500 font-mono mt-0.5">UID: {u.userId.slice(0, 8)}...</span>
+                                        <span className="text-[9px] text-slate-500 mt-0.5">
+                                          Último acesso: {u.lastActive?.toDate ? u.lastActive.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Nunca'}
+                                        </span>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-6 text-center tabular-nums">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-zello-orange/10 rounded-full text-zello-orange text-xs font-black italic">
-                                      {u.xp || 0}
+                                  <td className="p-4 sm:p-6 text-center">
+                                    <div className="flex flex-col items-center justify-center">
+                                      <div className={`text-[10px] font-black uppercase italic tracking-wider ${getRank(u.xp || 0).color}`}>
+                                        {getRank(u.xp || 0).name}
+                                      </div>
+                                      <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-zello-orange/10 rounded-full text-zello-orange text-[9px] font-black italic">
+                                        {u.xp || 0} XP
+                                      </div>
                                     </div>
-                                  </td>
-                                  <td className="p-6 text-center">
-                                    <div className={`text-[10px] font-black uppercase italic ${getRank(u.xp || 0).color}`}>
-                                      {getRank(u.xp || 0).name}
-                                    </div>
-                                  </td>
-                                  <td className="p-6 text-center tabular-nums">
-                                    <div className="text-sm font-black text-white">
-                                      {(u.unlockedPowers || []).length}
-                                    </div>
-                                  </td>
-                                  <td className="p-6 text-center">
-                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                      {MISSIONS[u.currentMissionIndex]?.title || `Início (${u.currentMissionIndex || 0})`}
-                                    </div>
-                                  </td>
-                                  <td className="p-6 text-center">
-                                    <div className="text-[10px] text-slate-500 font-medium">
-                                      {u.lastActive?.toDate ? u.lastActive.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Nunca'}
-                                    </div>
-                                  </td>
-                                  <td className="p-6 text-center">
-                                    <button
-                                      onClick={() => handleToggleUserAdmin(u.userId, !!u.isAdmin)}
-                                      disabled={u.userId === user?.uid}
-                                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:cursor-not-allowed ${u.isAdmin ? 'bg-zello-orange text-white shadow-[0_0_10px_rgba(240,90,40,0.3)]' : 'bg-white/5 text-slate-500 border border-white/10 hover:bg-white/10'}`}
-                                    >
-                                      {u.isAdmin ? 'ADMIN' : 'USER'}
-                                    </button>
                                   </td>
                                   {userProfile.isAdmin && (
-                                    <td className="p-6">
-                                      <div className="flex items-center justify-end gap-2">
+                                    <td className="p-4 sm:p-6">
+                                      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                                         <button
                                           onClick={() => handleToggleUserAdmin(u.userId, !!u.isAdmin)}
                                           disabled={u.userId === user?.uid}
-                                          title={u.isAdmin ? 'Remover Privilégios' : 'Tornar Administrador'}
-                                          className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all disabled:opacity-30"
+                                          title={u.isAdmin ? 'Remover Privilégios de Administrador' : 'Tornar Administrador'}
+                                          className={`p-2 rounded-xl transition-all disabled:opacity-30 flex items-center justify-center border ${
+                                            u.isAdmin 
+                                              ? 'bg-zello-orange/10 hover:bg-zello-orange/20 text-zello-orange border-zello-orange/20' 
+                                              : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/5'
+                                          }`}
                                         >
-                                          <LucideIcons.Shield size={16} />
+                                          <LucideIcons.Shield size={14} />
                                         </button>
                                         <button
                                           onClick={() => handleDeleteUser(u.userId)}
                                           disabled={u.userId === user?.uid}
-                                          title="Excluir da Plataforma"
-                                          className="p-3 bg-white/5 rounded-xl hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all disabled:opacity-30"
+                                          title="Excluir Participante da Plataforma"
+                                          className="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-red-500/20 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-all disabled:opacity-30 flex items-center justify-center"
                                         >
-                                          <LucideIcons.UserMinus size={16} />
+                                          <LucideIcons.UserMinus size={14} />
                                         </button>
                                       </div>
                                     </td>
@@ -1559,9 +1601,9 @@ export default function App() {
                               ))}
                               {companyUsers.length === 0 && (
                                 <tr key="company-users-empty-placeholder-v2">
-                                  <td colSpan={userProfile.isAdmin ? 8 : 7} className="p-20 text-center space-y-4">
-                                     <LucideIcons.Users2 className="text-slate-800 mx-auto" size={48} />
-                                     <p className="text-slate-500 font-medium italic">Nenhum outro participante encontrado nesta turma.</p>
+                                  <td colSpan={userProfile.isAdmin ? 3 : 2} className="p-20 text-center space-y-4">
+                                      <LucideIcons.Users2 className="text-slate-800 mx-auto" size={48} />
+                                      <p className="text-slate-500 font-medium italic">Nenhum outro participante encontrado nesta turma.</p>
                                   </td>
                                 </tr>
                               )}
@@ -1637,6 +1679,7 @@ export default function App() {
                   initialCompanyId={(userProfile?.companyId && userProfile.companyId !== 'null' && userProfile.companyId !== 'undefined') ? userProfile.companyId : ''}
                   initialSkillsSurvey={userProfile?.skillsSurvey}
                   isAdmin={!!userProfile?.isAdmin}
+                  onCancel={() => setGameState('home')}
                   onComplete={async (companyId, skillsSurvey) => {
                     if (!companyId || companyId === 'null' || companyId === 'undefined') {
                       console.error("onComplete called with invalid companyId in profile edit:", companyId);

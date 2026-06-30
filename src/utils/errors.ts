@@ -34,7 +34,7 @@ export const translateFirebaseError = (error: any): AppError => {
     );
   }
   return new AppError(
-    error?.message || 'Erro deconhecido',
+    error?.message || 'Erro desconhecido',
     code,
     'Erro de carregamento ou gravação na nuvem. Verifique sua conexão e tente novamente.'
   );
