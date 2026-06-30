@@ -500,7 +500,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         companyId: companyId,
-        isAdmin: false // Explicitly NOT admin as requested
+        isAdmin: userProfile?.isAdmin ?? false
       });
 
       setNewCompanyName('');
@@ -738,7 +738,7 @@ export default function App() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         companyId: cid,
-        isAdmin: false
+        isAdmin: userProfile?.isAdmin ?? false
       });
 
       setAdminShowAllCompanies(false);
