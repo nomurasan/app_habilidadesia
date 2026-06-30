@@ -212,7 +212,7 @@ export default function App() {
       if (snap.exists()) {
         setCurrentCompany(snap.data() as Company);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `companies/${userProfile.companyId}`));
+    }, (err) => handleFirestoreError(err, OperationType.GET, `companies/${userProfile.companyId}`, false));
     return () => unsubscribe();
   }, [userProfile?.companyId]);
 
@@ -286,7 +286,7 @@ export default function App() {
         teamEvolution,
         topSkills
       });
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'users'));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'users', false));
 
     return () => unsubscribe();
   }, [gameState, userProfile]);
@@ -300,7 +300,7 @@ export default function App() {
     const q = collection(db, 'companies', userProfile.companyId, 'whitelist');
     const unsubscribe = onSnapshot(q, (snap) => {
       setWhitelist(snap.docs.map(doc => doc.id));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'whitelist'));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'whitelist', false));
     return () => unsubscribe();
   }, [user, userProfile?.companyId, userProfile?.isAdmin, userProfile?.surveyCompleted]);
 
@@ -349,7 +349,7 @@ export default function App() {
       // Deduplicate by userId
       const uniqueUsers = Array.from(new Map(users.map(u => [u.userId, u])).values());
       setCompanyUsers(uniqueUsers);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'users'));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'users', false));
     return () => unsubscribe();
   }, [user, userProfile?.companyId, userProfile?.surveyCompleted]);
 
@@ -421,7 +421,7 @@ export default function App() {
             setCompletedMissions(newCompleted);
           }
         }
-      }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
+      }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, false));
     });
 
     return () => {

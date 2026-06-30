@@ -113,7 +113,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLoading(false);
       },
       (err) => {
-        handleFirestoreError(err, OperationType.LIST, 'users');
+        handleFirestoreError(err, OperationType.LIST, 'users', false);
         setLoading(false);
       }
     );

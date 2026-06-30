@@ -73,7 +73,11 @@ service cloud.firestore {
       // Allow listing users matching company boundaries (Query Enforcer)
       allow list: if isSignedIn() && (
         isGlobalAdmin() || 
-        (hasUserRecord(request.auth.uid) && resource.data.companyId == getUserRecord(request.auth.uid).get('companyId', ''))
+        (
+          hasUserRecord(request.auth.uid) && 
+          getUserRecord(request.auth.uid).get('companyId', '') != '' &&
+          resource.data.get('companyId', '') == getUserRecord(request.auth.uid).get('companyId', '')
+        )
       );
 
       // Creation: Only the user can create their own profile. Pre-allocate safe default privileges.
